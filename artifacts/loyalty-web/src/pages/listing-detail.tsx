@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { 
   useGetProduct, 
   useCreatePurchase,
+  getGetProductQueryKey,
   getGetCurrentUserQueryKey,
   getListTransactionsQueryKey,
   getGetDashboardSummaryQueryKey
@@ -26,6 +27,7 @@ export default function ListingDetail() {
 
   const { data: product, isLoading, error } = useGetProduct(Number(id), {
     query: {
+      queryKey: getGetProductQueryKey(Number(id)),
       enabled: !!id,
     }
   });

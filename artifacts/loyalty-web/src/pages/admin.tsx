@@ -1,4 +1,12 @@
-import { useGetAdminOverview, useGetAdminRecentActivity, useGetTopSellers, useGetCurrentUser } from "@workspace/api-client-react";
+import {
+  useGetAdminOverview,
+  useGetAdminRecentActivity,
+  useGetTopSellers,
+  useGetCurrentUser,
+  getGetAdminOverviewQueryKey,
+  getGetAdminRecentActivityQueryKey,
+  getGetTopSellersQueryKey,
+} from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Hexagon, Users, Package, Activity, TrendingUp, DollarSign, ShieldAlert, Award } from "lucide-react";
@@ -8,13 +16,13 @@ import { formatDistanceToNow } from "date-fns";
 export default function Admin() {
   const { data: user, isLoading: loadingUser } = useGetCurrentUser();
   const { data: overview, isLoading: loadingOverview } = useGetAdminOverview({
-    query: { enabled: user?.role === 'admin' }
+    query: { queryKey: getGetAdminOverviewQueryKey(), enabled: user?.role === 'admin' }
   });
   const { data: recentActivity, isLoading: loadingActivity } = useGetAdminRecentActivity({
-    query: { enabled: user?.role === 'admin' }
+    query: { queryKey: getGetAdminRecentActivityQueryKey(), enabled: user?.role === 'admin' }
   });
   const { data: topSellers, isLoading: loadingSellers } = useGetTopSellers({
-    query: { enabled: user?.role === 'admin' }
+    query: { queryKey: getGetTopSellersQueryKey(), enabled: user?.role === 'admin' }
   });
 
   if (loadingUser) {

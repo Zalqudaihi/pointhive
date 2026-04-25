@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useListUsers, useGetCurrentUser } from "@workspace/api-client-react";
+import { useListUsers, useGetCurrentUser, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Hexagon, ArrowRight, Loader2 } from "lucide-react";
@@ -15,7 +15,7 @@ export default function Login() {
   
   // If we already have a user, redirect to dashboard
   const { data: currentUser } = useGetCurrentUser({
-    query: { retry: false }
+    query: { queryKey: getGetCurrentUserQueryKey(), retry: false }
   });
 
   if (currentUser && !loadingId) {

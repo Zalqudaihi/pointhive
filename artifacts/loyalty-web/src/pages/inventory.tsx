@@ -22,7 +22,8 @@ import {
   Trash2,
   EyeOff,
   Eye,
-  Loader2
+  Loader2,
+  Package
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -55,6 +56,7 @@ export default function Inventory() {
     sellerId: user?.id
   }, {
     query: {
+      queryKey: getListProductsQueryKey({ sellerId: user?.id }),
       enabled: !!user?.id
     }
   });

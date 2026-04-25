@@ -1,5 +1,5 @@
 import { useParams, Link } from "wouter";
-import { useGetTransaction } from "@workspace/api-client-react";
+import { useGetTransaction, getGetTransactionQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ export default function TransactionDetail() {
 
   const { data: tx, isLoading, error } = useGetTransaction(Number(id), {
     query: {
+      queryKey: getGetTransactionQueryKey(Number(id)),
       enabled: !!id,
     }
   });

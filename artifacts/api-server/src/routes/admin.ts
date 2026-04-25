@@ -154,7 +154,6 @@ router.get("/admin/top-sellers", async (_req, res) => {
       })),
     ),
   );
-  void or; // unused import safety
 });
 
 export default router;

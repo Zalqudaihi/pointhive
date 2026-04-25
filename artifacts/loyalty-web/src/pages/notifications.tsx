@@ -29,7 +29,7 @@ export default function Notifications() {
 
   const handleMarkAllRead = async () => {
     try {
-      await markAllRead.mutateAsync({});
+      await markAllRead.mutateAsync();
       toast({ title: "All notifications marked as read" });
       queryClient.invalidateQueries({ queryKey: getListNotificationsQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });

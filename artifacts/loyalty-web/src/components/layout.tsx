@@ -6,6 +6,7 @@ import {
   useListUsers,
   useListNotifications,
   getGetCurrentUserQueryKey,
+  getListNotificationsQueryKey,
 } from "@workspace/api-client-react";
 import {
   DropdownMenu,
@@ -39,6 +40,7 @@ export function Layout({ children }: { children: ReactNode }) {
   
   const { data: user } = useGetCurrentUser({
     query: {
+      queryKey: getGetCurrentUserQueryKey(),
       retry: false,
     },
   });
@@ -46,6 +48,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const { data: users } = useListUsers();
   const { data: notifications } = useListNotifications({
     query: {
+      queryKey: getListNotificationsQueryKey(),
       enabled: !!user,
     }
   });
