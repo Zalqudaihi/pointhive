@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { 
   useGetCurrentUser,
   useListProducts, 
@@ -11,7 +12,6 @@ import {
   ProductUpdateStatus,
 } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -19,7 +19,6 @@ import {
   Gift, 
   ShoppingBag, 
   MoreVertical,
-  Pencil,
   Trash2,
   EyeOff,
   Eye,
@@ -47,6 +46,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function Inventory() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -77,17 +77,17 @@ export default function Inventory() {
       });
 
       toast({
-        title: "Listing updated",
-        description: `Your listing is now ${newStatus}.`,
+        title: t("inventory.updatedTitle"),
+        description: t("inventory.updatedDesc", { status: newStatus }),
       });
 
       queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not update the listing.";
+      const message = err instanceof Error ? err.message : t("inventory.updateError");
       toast({
         variant: "destructive",
-        title: "Failed to update",
+        title: t("inventory.updateError"),
         description: message,
       });
     }
@@ -100,17 +100,17 @@ export default function Inventory() {
       await deleteProduct.mutateAsync({ id: deleteId });
       
       toast({
-        title: "Listing deleted",
-        description: "Your listing has been permanently removed.",
+        title: t("inventory.deleteTitle"),
+        description: t("inventory.deleteDesc"),
       });
       
       queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not delete the listing.";
+      const message = err instanceof Error ? err.message : t("inventory.deleteError");
       toast({
         variant: "destructive",
-        title: "Failed to delete",
+        title: t("inventory.deleteError"),
         description: message,
       });
     } finally {
@@ -122,11 +122,11 @@ export default function Inventory() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-end">
         <div>
-          <h1 className="text-3xl font-black tracking-tight">Your Inventory</h1>
-          <p className="text-muted-foreground mt-1">Manage your active listings and drafts.</p>
+          <h1 className="text-3xl font-black tracking-tight">{t("inventory.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("inventory.subtitle")}</p>
         </div>
         <Link href="/sell">
-          <Button className="hover-elevate">Create Listing</Button>
+          <Button className="hover-elevate">{t("inventory.newListing")}</Button>
         </Link>
       </div>
 
@@ -139,10 +139,10 @@ export default function Inventory() {
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <Package className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-bold mb-1">No listings yet</h3>
-          <p className="text-muted-foreground mb-6">You haven't posted anything for sale.</p>
+          <h3 className="text-lg font-bold mb-1">{t("inventory.empty")}</h3>
+          <p className="text-muted-foreground mb-6">{t("inventory.emptyDesc")}</p>
           <Link href="/sell">
-            <Button>Create your first listing</Button>
+            <Button>{t("inventory.createFirst")}</Button>
           </Link>
         </div>
       ) : (
@@ -169,14 +169,14 @@ export default function Inventory() {
                     <h3 className="font-bold truncate" title={product.title}>{product.title}</h3>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0">
+                        <Button variant="ghost" size="icon" className="-mr-2 rtl:-mr-0 rtl:-ml-2 -mt-2 h-8 w-8 shrink-0">
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <Link href={`/marketplace/${product.id}`}>
                           <DropdownMenuItem className="cursor-pointer">
-                            <Eye className="w-4 h-4 mr-2" /> View Public
+                            <Eye className="w-4 h-4 mr-2 rtl:mr-0 rtl:ml-2" /> {t("inventory.edit")}
                           </DropdownMenuItem>
                         </Link>
                         {product.status !== 'sold' && (
@@ -185,9 +185,9 @@ export default function Inventory() {
                             onClick={() => handleToggleStatus(product.id, product.status)}
                           >
                             {product.status === 'active' ? (
-                              <><EyeOff className="w-4 h-4 mr-2" /> Unpublish</>
+                              <><EyeOff className="w-4 h-4 mr-2 rtl:mr-0 rtl:ml-2" /> {t("inventory.toggleDraft")}</>
                             ) : (
-                              <><Eye className="w-4 h-4 mr-2" /> Publish</>
+                              <><Eye className="w-4 h-4 mr-2 rtl:mr-0 rtl:ml-2" /> {t("inventory.toggleActive")}</>
                             )}
                           </DropdownMenuItem>
                         )}
@@ -196,19 +196,19 @@ export default function Inventory() {
                           className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
                           onClick={() => setDeleteId(product.id)}
                         >
-                          <Trash2 className="w-4 h-4 mr-2" /> Delete
+                          <Trash2 className="w-4 h-4 mr-2 rtl:mr-0 rtl:ml-2" /> {t("inventory.delete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                   
                   <div className="text-xs text-muted-foreground mb-auto">
-                    Stock: {product.stock}
+                    {t("listingDetail.inStock", { n: product.stock })}
                   </div>
                   
                   <div className="mt-3 font-bold text-primary flex items-center gap-1">
                     <Hexagon className="w-4 h-4 fill-primary" />
-                    {product.pointPrice.toLocaleString()} pts
+                    {product.pointPrice.toLocaleString()} {t("common.pts")}
                   </div>
                 </div>
               </div>
@@ -220,13 +220,13 @@ export default function Inventory() {
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this listing?</AlertDialogTitle>
+            <AlertDialogTitle>{t("inventory.deleteConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently remove your listing from the marketplace.
+              {t("inventory.deleteConfirmDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("inventory.cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={(e) => {
                 e.preventDefault();
@@ -235,8 +235,8 @@ export default function Inventory() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteProduct.isPending}
             >
-              {deleteProduct.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
-              Delete
+              {deleteProduct.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2 rtl:mr-0 rtl:ml-2" /> : <Trash2 className="w-4 h-4 mr-2 rtl:mr-0 rtl:ml-2" />}
+              {t("inventory.confirmDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

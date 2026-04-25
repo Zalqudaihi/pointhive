@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   useGetCurrentUser,
   useListUsers,
@@ -29,15 +30,41 @@ import {
   Send,
   History,
   Shield,
-  LogOut,
   User as UserIcon,
+  Globe,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import i18n from "@/i18n";
+
+function LanguageSwitcher() {
+  const { t, i18n: i18next } = useTranslation();
+  const currentLang = i18next.language;
+
+  const toggle = () => {
+    i18n.changeLanguage(currentLang === "ar" ? "en" : "ar");
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={toggle}
+      className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground font-medium text-sm"
+      title={currentLang === "ar" ? t("lang.en") : t("lang.ar")}
+    >
+      <Globe className="w-4 h-4 shrink-0" />
+      <span className="hidden sm:inline">
+        {currentLang === "ar" ? "EN" : "AR"}
+      </span>
+    </Button>
+  );
+}
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const queryClient = useQueryClient();
-  
+  const { t } = useTranslation();
+
   const { data: user } = useGetCurrentUser({
     query: {
       queryKey: getGetCurrentUserQueryKey(),
@@ -50,10 +77,10 @@ export function Layout({ children }: { children: ReactNode }) {
     query: {
       queryKey: getListNotificationsQueryKey(),
       enabled: !!user,
-    }
+    },
   });
 
-  const unreadCount = notifications?.filter(n => !n.read).length || 0;
+  const unreadCount = notifications?.filter((n) => !n.read).length || 0;
 
   const handleSwitchUser = (userId: number) => {
     localStorage.setItem("pointhive.userId", String(userId));
@@ -62,12 +89,36 @@ export function Layout({ children }: { children: ReactNode }) {
   };
 
   const navLinks = [
-    { href: "/", label: "Dashboard", icon: <Hexagon className="w-4 h-4" /> },
-    { href: "/marketplace", label: "Marketplace", icon: <Store className="w-4 h-4" /> },
-    { href: "/sell", label: "Sell", icon: <PlusCircle className="w-4 h-4" /> },
-    { href: "/inventory", label: "Inventory", icon: <Package className="w-4 h-4" /> },
-    { href: "/transfer", label: "Transfer", icon: <Send className="w-4 h-4" /> },
-    { href: "/transactions", label: "Activity", icon: <History className="w-4 h-4" /> },
+    {
+      href: "/",
+      label: t("nav.dashboard"),
+      icon: <Hexagon className="w-4 h-4" />,
+    },
+    {
+      href: "/marketplace",
+      label: t("nav.marketplace"),
+      icon: <Store className="w-4 h-4" />,
+    },
+    {
+      href: "/sell",
+      label: t("nav.sell"),
+      icon: <PlusCircle className="w-4 h-4" />,
+    },
+    {
+      href: "/inventory",
+      label: t("nav.inventory"),
+      icon: <Package className="w-4 h-4" />,
+    },
+    {
+      href: "/transfer",
+      label: t("nav.transfer"),
+      icon: <Send className="w-4 h-4" />,
+    },
+    {
+      href: "/transactions",
+      label: t("nav.activity"),
+      icon: <History className="w-4 h-4" />,
+    },
   ];
 
   if (!user) {
@@ -85,7 +136,9 @@ export function Layout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2 text-primary">
               <Hexagon className="w-8 h-8 fill-primary text-primary" />
-              <span className="text-xl font-bold tracking-tight hidden sm:inline-block">PointHive</span>
+              <span className="text-xl font-bold tracking-tight hidden sm:inline-block">
+                PointHive
+              </span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">
@@ -106,14 +159,20 @@ export function Layout({ children }: { children: ReactNode }) {
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold">
               <Hexagon className="w-4 h-4 fill-primary" />
-              {user.pointsBalance.toLocaleString()} pts
+              {user.pointsBalance.toLocaleString()} {t("layout.pts")}
             </div>
 
+            <LanguageSwitcher />
+
             <Link href="/notifications">
-              <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-muted-foreground hover:text-foreground"
+              >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 px-1.5 min-w-5 h-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px]">
@@ -125,7 +184,11 @@ export function Layout({ children }: { children: ReactNode }) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
                   <Avatar className="w-9 h-9 border-2 border-background shadow-sm hover-elevate">
                     <AvatarImage src={user.avatarUrl || ""} alt={user.name} />
                     <AvatarFallback className="bg-primary/20 text-primary font-semibold">
@@ -137,39 +200,45 @@ export function Layout({ children }: { children: ReactNode }) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    <p className="text-sm font-medium leading-none">
+                      {user.name}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <div className="p-2 sm:hidden">
                   <div className="flex items-center justify-between px-2 py-1.5 rounded-md bg-primary/10 text-primary font-bold text-sm">
-                    <span>Balance</span>
+                    <span>{t("layout.balance")}</span>
                     <span className="flex items-center gap-1">
                       <Hexagon className="w-3 h-3 fill-primary" />
-                      {user.pointsBalance.toLocaleString()} pts
+                      {user.pointsBalance.toLocaleString()} {t("layout.pts")}
                     </span>
                   </div>
                 </div>
                 <Link href="/profile">
                   <DropdownMenuItem className="cursor-pointer">
                     <UserIcon className="w-4 h-4 mr-2" />
-                    Profile
+                    {t("layout.profile")}
                   </DropdownMenuItem>
                 </Link>
-                {user.role === 'admin' && (
+                {user.role === "admin" && (
                   <Link href="/admin">
                     <DropdownMenuItem className="cursor-pointer">
                       <Shield className="w-4 h-4 mr-2 text-primary" />
-                      Admin Dashboard
+                      {t("layout.adminDashboard")}
                     </DropdownMenuItem>
                   </Link>
                 )}
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">Switch Demo User</DropdownMenuLabel>
-                {users?.map(u => (
-                  <DropdownMenuItem 
-                    key={u.id} 
+                <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">
+                  {t("layout.switchDemoUser")}
+                </DropdownMenuLabel>
+                {users?.map((u) => (
+                  <DropdownMenuItem
+                    key={u.id}
                     onClick={() => handleSwitchUser(u.id)}
                     className="cursor-pointer flex items-center justify-between"
                   >
@@ -178,9 +247,17 @@ export function Layout({ children }: { children: ReactNode }) {
                         <AvatarImage src={u.avatarUrl || ""} />
                         <AvatarFallback>{u.name.charAt(0)}</AvatarFallback>
                       </Avatar>
-                      <span className={u.id === user.id ? "font-bold text-primary" : ""}>{u.name}</span>
+                      <span
+                        className={
+                          u.id === user.id ? "font-bold text-primary" : ""
+                        }
+                      >
+                        {u.name}
+                      </span>
                     </div>
-                    {u.id === user.id && <div className="w-2 h-2 rounded-full bg-primary" />}
+                    {u.id === user.id && (
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                    )}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -195,7 +272,9 @@ export function Layout({ children }: { children: ReactNode }) {
               <SheetContent side="right" className="w-72">
                 <div className="flex items-center gap-2 mb-8 text-primary">
                   <Hexagon className="w-6 h-6 fill-primary text-primary" />
-                  <span className="text-lg font-bold tracking-tight">PointHive</span>
+                  <span className="text-lg font-bold tracking-tight">
+                    PointHive
+                  </span>
                 </div>
                 <nav className="flex flex-col gap-2">
                   {navLinks.map((link) => (
@@ -212,15 +291,16 @@ export function Layout({ children }: { children: ReactNode }) {
                       {link.label}
                     </Link>
                   ))}
+                  <div className="mt-4 pt-4 border-t">
+                    <LanguageSwitcher />
+                  </div>
                 </nav>
               </SheetContent>
             </Sheet>
           </div>
         </div>
       </header>
-      <main className="flex-1 container mx-auto px-4 py-8">
-        {children}
-      </main>
+      <main className="flex-1 container mx-auto px-4 py-8">{children}</main>
     </div>
   );
 }

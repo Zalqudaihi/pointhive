@@ -4,13 +4,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 import { 
   useCreateProduct,
   type NewProduct,
   getListProductsQueryKey,
   getGetDashboardSummaryQueryKey
 } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,6 +56,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function Sell() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -105,8 +107,8 @@ export default function Sell() {
       await createProduct.mutateAsync({ data: payload });
 
       toast({
-        title: "Listing created!",
-        description: "Your product is now live on the marketplace.",
+        title: t("sell.successTitle"),
+        description: t("sell.successDesc"),
       });
 
       queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
@@ -114,10 +116,10 @@ export default function Sell() {
 
       setLocation("/inventory");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+      const message = error instanceof Error ? error.message : t("sell.errorTitle");
       toast({
         variant: "destructive",
-        title: "Failed to create listing",
+        title: t("sell.errorTitle"),
         description: message,
       });
     } finally {
@@ -128,8 +130,8 @@ export default function Sell() {
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500 pb-12">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">Create a Listing</h1>
-        <p className="text-muted-foreground mt-1">Turn your unused items or coupons into points.</p>
+        <h1 className="text-3xl font-black tracking-tight">{t("sell.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("sell.subtitle")}</p>
       </div>
 
       <Card className="border-border/50 shadow-sm overflow-hidden">
@@ -141,7 +143,7 @@ export default function Sell() {
               <div className="space-y-4">
                 <h3 className="text-lg font-bold flex items-center gap-2">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-sm">1</span>
-                  What are you selling?
+                  {t("sell.typeLabel")}
                 </h3>
                 
                 <FormField
@@ -164,7 +166,7 @@ export default function Sell() {
                                   className="flex flex-col items-center justify-center rounded-xl border-2 border-muted bg-popover p-4 hover:bg-muted/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:text-primary cursor-pointer transition-all"
                                 >
                                   <Package className="mb-2 h-6 w-6" />
-                                  <span className="font-semibold">Physical Item</span>
+                                  <span className="font-semibold">{t("sell.item")}</span>
                                 </Label>
                               </div>
                             </FormControl>
@@ -178,7 +180,7 @@ export default function Sell() {
                                   className="flex flex-col items-center justify-center rounded-xl border-2 border-muted bg-popover p-4 hover:bg-muted/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:text-primary cursor-pointer transition-all"
                                 >
                                   <Gift className="mb-2 h-6 w-6" />
-                                  <span className="font-semibold">Digital Coupon</span>
+                                  <span className="font-semibold">{t("sell.coupon")}</span>
                                 </Label>
                               </div>
                             </FormControl>
@@ -194,7 +196,7 @@ export default function Sell() {
               <div className="space-y-4">
                 <h3 className="text-lg font-bold flex items-center gap-2">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-sm">2</span>
-                  Details
+                  {t("common.item")}
                 </h3>
                 
                 <div className="grid gap-6">
@@ -203,9 +205,9 @@ export default function Sell() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Title</FormLabel>
+                        <FormLabel>{t("sell.titleField")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Vintage Denim Jacket or 20% off Coffee" {...field} />
+                          <Input placeholder={t("sell.titlePlaceholder")} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -218,9 +220,9 @@ export default function Sell() {
                       name="category"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Category</FormLabel>
+                          <FormLabel>{t("sell.category")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., Fashion, Food, Tech" {...field} />
+                            <Input placeholder={t("sell.categoryPlaceholder")} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -232,7 +234,7 @@ export default function Sell() {
                       name="stock"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Quantity / Stock</FormLabel>
+                          <FormLabel>{t("sell.stock")}</FormLabel>
                           <FormControl>
                             <Input type="number" min="1" {...field} />
                           </FormControl>
@@ -247,10 +249,10 @@ export default function Sell() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description</FormLabel>
+                        <FormLabel>{t("sell.description")}</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="Describe what you're listing. Be specific!" 
+                            placeholder={t("sell.descriptionPlaceholder")}
                             className="min-h-[100px]"
                             {...field} 
                           />
@@ -267,12 +269,11 @@ export default function Sell() {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
                           <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                          Image URL (optional)
+                          {t("sell.imageUrl")}
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="https://..." {...field} />
+                          <Input placeholder={t("sell.imageUrlPlaceholder")} {...field} />
                         </FormControl>
-                        <FormDescription>A direct link to an image of the item.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -284,7 +285,7 @@ export default function Sell() {
                 <div className="space-y-4 p-4 bg-secondary/20 rounded-2xl border border-secondary/30">
                   <h3 className="font-bold flex items-center gap-2 text-secondary-foreground">
                     <Gift className="w-4 h-4" />
-                    Coupon Specifics
+                    {t("sell.couponSection")}
                   </h3>
                   
                   <div className="grid sm:grid-cols-2 gap-4">
@@ -293,9 +294,9 @@ export default function Sell() {
                       name="couponCode"
                       render={({ field }) => (
                         <FormItem className="sm:col-span-2">
-                          <FormLabel>Coupon Code (Hidden until purchase)</FormLabel>
+                          <FormLabel>{t("sell.couponCode")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., SUMMER20" className="font-mono" {...field} />
+                            <Input placeholder={t("sell.couponCodePlaceholder")} className="font-mono" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -307,11 +308,11 @@ export default function Sell() {
                       name="couponDiscountPct"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Discount % (optional)</FormLabel>
+                          <FormLabel>{t("sell.couponDiscount")}</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Input type="number" min="1" max="100" placeholder="20" {...field} />
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>
+                              <span className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -324,7 +325,7 @@ export default function Sell() {
                       name="couponExpiresAt"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Expiration Date (optional)</FormLabel>
+                          <FormLabel>{t("sell.couponExpiry")}</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -339,7 +340,7 @@ export default function Sell() {
               <div className="space-y-4">
                 <h3 className="text-lg font-bold flex items-center gap-2">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-sm">3</span>
-                  Pricing
+                  {t("sell.price")}
                 </h3>
                 
                 <div className="grid sm:grid-cols-2 gap-6 bg-muted/30 p-6 rounded-2xl border border-border/50">
@@ -348,14 +349,14 @@ export default function Sell() {
                     name="pointPrice"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary font-bold">Price in Points *</FormLabel>
+                        <FormLabel className="text-primary font-bold">{t("sell.price")} *</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Hexagon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 fill-primary text-primary" />
+                            <Hexagon className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-5 h-5 fill-primary text-primary" />
                             <Input 
                               type="number" 
                               min="1" 
-                              className="pl-10 text-lg font-bold bg-background border-primary/50" 
+                              className="pl-10 rtl:pl-3 rtl:pr-10 text-lg font-bold bg-background border-primary/50" 
                               {...field} 
                             />
                           </div>
@@ -370,16 +371,16 @@ export default function Sell() {
                     name="cashPriceCents"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-muted-foreground">Original Cash Value (optional)</FormLabel>
+                        <FormLabel className="text-muted-foreground">{t("sell.cashPrice")}</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">$</span>
+                            <span className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">$</span>
                             <Input 
                               type="number" 
                               min="0" 
                               step="0.01"
-                              placeholder="0.00"
-                              className="pl-8 bg-background" 
+                              placeholder={t("sell.cashPricePlaceholder")}
+                              className="pl-8 rtl:pl-3 rtl:pr-8 bg-background" 
                               value={field.value ? Number(field.value) / 100 : ""}
                               onChange={(e) => {
                                 const val = e.target.value;
@@ -388,7 +389,7 @@ export default function Sell() {
                             />
                           </div>
                         </FormControl>
-                        <FormDescription>Shows buyers the real-world value.</FormDescription>
+                        <FormDescription>{t("sell.cashPrice")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -403,11 +404,11 @@ export default function Sell() {
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  <Loader2 className="w-5 h-5 animate-spin mr-2 rtl:mr-0 rtl:ml-2" />
                 ) : (
-                  <PlusCircle className="w-5 h-5 mr-2" />
+                  <PlusCircle className="w-5 h-5 mr-2 rtl:mr-0 rtl:ml-2" />
                 )}
-                Post Listing
+                {isSubmitting ? t("sell.submitting") : t("sell.submit")}
               </Button>
             </form>
           </Form>
@@ -416,4 +417,3 @@ export default function Sell() {
     </div>
   );
 }
-

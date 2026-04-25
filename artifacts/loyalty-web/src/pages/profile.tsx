@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { 
   useGetCurrentUser, 
   useUpdateCurrentUser, 
@@ -35,6 +36,7 @@ const profileSchema = z.object({
 type ProfileValues = z.infer<typeof profileSchema>;
 
 export default function Profile() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
@@ -73,16 +75,16 @@ export default function Profile() {
       });
 
       toast({
-        title: "Profile updated",
-        description: "Your profile changes have been saved.",
+        title: t("profile.successTitle"),
+        description: t("profile.successDesc"),
       });
 
       queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not save your profile.";
+      const message = error instanceof Error ? error.message : t("profile.errorTitle");
       toast({
         variant: "destructive",
-        title: "Update failed",
+        title: t("profile.errorTitle"),
         description: message,
       });
     } finally {
@@ -98,7 +100,7 @@ export default function Profile() {
       <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500 py-12">
         <div className="flex flex-col items-center justify-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          <p className="text-muted-foreground">Loading profile...</p>
+          <p className="text-muted-foreground">{t("profile.loadingProfile")}</p>
         </div>
       </div>
     );
@@ -109,8 +111,8 @@ export default function Profile() {
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500 pb-12">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">Your Profile</h1>
-        <p className="text-muted-foreground mt-1">Manage your public identity on the hive.</p>
+        <h1 className="text-3xl font-black tracking-tight">{t("profile.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("profile.subtitle")}</p>
       </div>
 
       <Card className="border-border/50 shadow-sm overflow-hidden">
@@ -134,7 +136,7 @@ export default function Profile() {
             <div className="pb-2 shrink-0">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary font-bold">
                 <Hexagon className="w-5 h-5 fill-primary" />
-                <span className="text-lg">{user.pointsBalance.toLocaleString()} pts</span>
+                <span className="text-lg">{user.pointsBalance.toLocaleString()} {t("common.pts")}</span>
               </div>
             </div>
           </div>
@@ -147,9 +149,9 @@ export default function Profile() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Display Name</FormLabel>
+                      <FormLabel>{t("profile.displayName")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Your name" {...field} />
+                        <Input placeholder={t("profile.displayNamePlaceholder")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -161,17 +163,17 @@ export default function Profile() {
                   name="bio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Bio</FormLabel>
+                      <FormLabel>{t("profile.bio")}</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Tell the hive a bit about yourself..." 
+                          placeholder={t("profile.bioPlaceholder")}
                           className="resize-none"
                           maxLength={160}
                           {...field} 
                         />
                       </FormControl>
                       <FormDescription className="flex justify-between">
-                        <span>A short description for your public profile.</span>
+                        <span>{t("profile.bioDesc")}</span>
                         <span>{field.value?.length || 0}/160</span>
                       </FormDescription>
                       <FormMessage />
@@ -186,10 +188,10 @@ export default function Profile() {
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
                         <Camera className="w-4 h-4 text-muted-foreground" />
-                        Avatar URL
+                        {t("profile.avatarUrl")}
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="https://..." {...field} />
+                        <Input placeholder={t("profile.avatarUrlPlaceholder")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -204,15 +206,15 @@ export default function Profile() {
                   disabled={isSaving || !form.formState.isDirty}
                 >
                   {isSaving ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <Loader2 className="w-4 h-4 animate-spin mr-2 rtl:mr-0 rtl:ml-2" />
                   ) : (
-                    <Save className="w-4 h-4 mr-2" />
+                    <Save className="w-4 h-4 mr-2 rtl:mr-0 rtl:ml-2" />
                   )}
-                  Save Changes
+                  {isSaving ? t("profile.saving") : t("profile.save")}
                 </Button>
                 
-                <div className="text-xs text-muted-foreground ml-auto">
-                  Member since {format(new Date(user.createdAt), "MMMM yyyy")}
+                <div className="text-xs text-muted-foreground ml-auto rtl:ml-0 rtl:mr-auto">
+                  {t("profile.memberSince", { date: format(new Date(user.createdAt), "MMMM yyyy") })}
                 </div>
               </div>
             </form>

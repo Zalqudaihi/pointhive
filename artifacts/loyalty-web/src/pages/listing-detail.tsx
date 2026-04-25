@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation, useParams, Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { 
   useGetProduct, 
   useCreatePurchase,
@@ -19,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
 export default function ListingDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -42,8 +44,8 @@ export default function ListingDetail() {
       await createPurchase.mutateAsync({ data: { productId: product.id } });
       
       toast({
-        title: "Purchase successful!",
-        description: `You bought ${product.title} for ${product.pointPrice.toLocaleString()} pts.`,
+        title: t("listingDetail.successTitle"),
+        description: t("listingDetail.successDesc", { product: product.title, price: product.pointPrice.toLocaleString() }),
       });
       
       queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
@@ -52,10 +54,10 @@ export default function ListingDetail() {
       
       setLocation("/transactions");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "You might not have enough points.";
+      const message = err instanceof Error ? err.message : t("listingDetail.notEnoughPts");
       toast({
         variant: "destructive",
-        title: "Purchase failed",
+        title: t("listingDetail.errorTitle"),
         description: message,
       });
     } finally {
@@ -82,10 +84,10 @@ export default function ListingDetail() {
   if (error || !product) {
     return (
       <div className="py-20 text-center space-y-4">
-        <h2 className="text-2xl font-bold">Listing not found</h2>
-        <p className="text-muted-foreground">The item you're looking for doesn't exist or has been removed.</p>
+        <h2 className="text-2xl font-bold">{t("listingDetail.notFound")}</h2>
+        <p className="text-muted-foreground">{t("notFound.desc")}</p>
         <Link href="/marketplace">
-          <Button variant="outline">Back to Marketplace</Button>
+          <Button variant="outline">{t("nav.marketplace")}</Button>
         </Link>
       </div>
     );
@@ -96,12 +98,11 @@ export default function ListingDetail() {
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-12">
       <Link href="/marketplace" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group">
-        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-        Back to marketplace
+        <ArrowLeft className="w-4 h-4 mr-2 rtl:mr-0 rtl:ml-2 rtl:rotate-180 group-hover:-translate-x-1 rtl:group-hover:translate-x-1 transition-transform" />
+        {t("nav.marketplace")}
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
-        {/* Image Side */}
         <div className="aspect-[4/3] md:aspect-square w-full bg-muted rounded-3xl overflow-hidden relative shadow-sm border">
           {product.imageUrl ? (
             <img 
@@ -114,19 +115,18 @@ export default function ListingDetail() {
               {product.type === 'coupon' ? <Gift className="w-24 h-24 mb-4" /> : <ShoppingBag className="w-24 h-24 mb-4" />}
             </div>
           )}
-          <div className="absolute top-4 right-4 flex gap-2">
+          <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 flex gap-2">
             <Badge variant="secondary" className="backdrop-blur-md bg-background/90 text-foreground uppercase tracking-wider font-bold shadow-sm">
-              {product.type}
+              {product.type === 'coupon' ? t("common.coupon") : t("common.item")}
             </Badge>
             {!isAvailable && (
               <Badge variant="destructive" className="uppercase tracking-wider font-bold shadow-sm">
-                {product.status === 'sold' ? 'Sold Out' : 'Unavailable'}
+                {product.status === 'sold' ? t("common.sold") : t("common.draft")}
               </Badge>
             )}
           </div>
         </div>
 
-        {/* Details Side */}
         <div className="space-y-8">
           <div className="space-y-4">
             <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5 uppercase tracking-widest text-xs font-bold px-3 py-1">
@@ -141,13 +141,15 @@ export default function ListingDetail() {
                 <AvatarImage src={product.sellerAvatarUrl || ""} />
                 <AvatarFallback>{product.sellerName.charAt(0)}</AvatarFallback>
               </Avatar>
-              <span className="text-muted-foreground font-medium">Listed by <span className="text-foreground font-bold">{product.sellerName}</span></span>
+              <span className="text-muted-foreground font-medium">
+                {t("listingDetail.soldBy")} <span className="text-foreground font-bold">{product.sellerName}</span>
+              </span>
             </div>
           </div>
 
           <div className="p-6 bg-muted/30 rounded-2xl border border-border/50">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Price</span>
+              <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{t("sell.price")}</span>
               <div className="flex items-baseline gap-4">
                 <div className="flex items-center gap-2 font-black text-4xl text-primary">
                   <Hexagon className="w-8 h-8 fill-primary text-primary" />
@@ -165,13 +167,13 @@ export default function ListingDetail() {
               <div className="mt-4 pt-4 border-t border-border flex items-center gap-6">
                 {product.couponDiscountPct && (
                   <div>
-                    <span className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Discount</span>
+                    <span className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{t("listingDetail.discount", { pct: "" }).replace(" ", "")}</span>
                     <span className="font-bold text-lg">{product.couponDiscountPct}% OFF</span>
                   </div>
                 )}
                 {product.couponExpiresAt && (
                   <div>
-                    <span className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Expires</span>
+                    <span className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{t("listingDetail.expires", { date: "" }).replace(" ", "")}</span>
                     <span className="font-bold text-lg flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       {format(new Date(product.couponExpiresAt), 'MMM d, yyyy')}
@@ -183,7 +185,7 @@ export default function ListingDetail() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-bold text-lg">Description</h3>
+            <h3 className="font-bold text-lg">{t("sell.description")}</h3>
             <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
               {product.description}
             </p>
@@ -197,19 +199,19 @@ export default function ListingDetail() {
               onClick={handlePurchase}
             >
               {isBuying ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                <Loader2 className="w-5 h-5 animate-spin mr-2 rtl:mr-0 rtl:ml-2" />
               ) : !isAvailable ? (
-                "Currently Unavailable"
+                t("common.sold")
               ) : (
                 <>
-                  Buy with Points
-                  <Hexagon className="w-5 h-5 ml-2 fill-current opacity-70 group-hover:scale-110 transition-transform" />
+                  {t("listingDetail.buy")}
+                  <Hexagon className="w-5 h-5 ml-2 rtl:ml-0 rtl:mr-2 fill-current opacity-70 group-hover:scale-110 transition-transform" />
                 </>
               )}
             </Button>
             <p className="text-center text-sm text-muted-foreground mt-4 flex items-center justify-center gap-1">
               <CheckCircle2 className="w-4 h-4 text-green-500" />
-              Instant digital delivery for coupons
+              {t("listingDetail.cashAlso")}
             </p>
           </div>
         </div>

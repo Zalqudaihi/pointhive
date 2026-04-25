@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useGetDashboardSummary, useGetDashboardActivity, useGetTrendingProducts } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hexagon, TrendingUp, TrendingDown, Package, Gift, ShoppingBag, Bell, Activity, ArrowRight, Send } from "lucide-react";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { data: summary, isLoading: loadingSummary } = useGetDashboardSummary();
   const { data: activity, isLoading: loadingActivity } = useGetDashboardActivity();
   const { data: trending, isLoading: loadingTrending } = useGetTrendingProducts();
@@ -15,8 +17,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <h1 className="text-3xl font-black tracking-tight text-foreground">Your Hive</h1>
-        <p className="text-muted-foreground mt-1">Here's what's buzzing with your points today.</p>
+        <h1 className="text-3xl font-black tracking-tight text-foreground">{t("dashboard.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("dashboard.subtitle")}</p>
       </div>
 
       {loadingSummary ? (
@@ -32,17 +34,17 @@ export default function Dashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-primary-foreground/80 font-medium text-sm flex items-center gap-2">
                 <Hexagon className="w-4 h-4 fill-current" />
-                Total Balance
+                {t("dashboard.totalBalance")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-black">{summary.pointsBalance.toLocaleString()}</div>
             </CardContent>
           </Card>
-          
+
           <Card className="hover-elevate">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-muted-foreground font-medium text-sm">30d Flow</CardTitle>
+              <CardTitle className="text-muted-foreground font-medium text-sm">{t("dashboard.flow30d")}</CardTitle>
               <Activity className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -52,7 +54,7 @@ export default function Dashboard() {
                     <TrendingUp className="w-3 h-3 mr-1" />
                     +{summary.pointsEarned30d.toLocaleString()}
                   </div>
-                  <div className="text-xs text-muted-foreground">Earned</div>
+                  <div className="text-xs text-muted-foreground">{t("dashboard.earned")}</div>
                 </div>
                 <div className="w-px h-8 bg-border" />
                 <div>
@@ -60,7 +62,7 @@ export default function Dashboard() {
                     <TrendingDown className="w-3 h-3 mr-1" />
                     -{summary.pointsSpent30d.toLocaleString()}
                   </div>
-                  <div className="text-xs text-muted-foreground">Spent</div>
+                  <div className="text-xs text-muted-foreground">{t("dashboard.spent")}</div>
                 </div>
               </div>
             </CardContent>
@@ -68,30 +70,30 @@ export default function Dashboard() {
 
           <Card className="hover-elevate">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-muted-foreground font-medium text-sm">Your Listings</CardTitle>
+              <CardTitle className="text-muted-foreground font-medium text-sm">{t("dashboard.yourListings")}</CardTitle>
               <Package className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{summary.activeListings}</div>
-              <p className="text-xs text-muted-foreground mt-1">Active on marketplace</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("dashboard.activeOnMarketplace")}</p>
             </CardContent>
           </Card>
 
           <Card className="hover-elevate">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-muted-foreground font-medium text-sm">Coupons & Purchases</CardTitle>
+              <CardTitle className="text-muted-foreground font-medium text-sm">{t("dashboard.couponsAndPurchases")}</CardTitle>
               <Gift className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
                 <div>
                   <div className="text-2xl font-bold">{summary.couponsOwned}</div>
-                  <div className="text-xs text-muted-foreground">Coupons</div>
+                  <div className="text-xs text-muted-foreground">{t("dashboard.coupons")}</div>
                 </div>
                 <div className="w-px h-8 bg-border" />
                 <div>
                   <div className="text-2xl font-bold">{summary.completedPurchases}</div>
-                  <div className="text-xs text-muted-foreground">Items</div>
+                  <div className="text-xs text-muted-foreground">{t("dashboard.items")}</div>
                 </div>
               </div>
             </CardContent>
@@ -102,14 +104,14 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold">Trending in the Hive</h2>
+            <h2 className="text-xl font-bold">{t("dashboard.trending")}</h2>
             <Link href="/marketplace">
               <Button variant="ghost" className="text-primary group">
-                View all <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                {t("dashboard.viewAll")} <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform rtl:rotate-180" />
               </Button>
             </Link>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {loadingTrending ? (
               [1, 2].map(i => <Skeleton key={i} className="h-64 rounded-2xl" />)
@@ -119,14 +121,14 @@ export default function Dashboard() {
                   <Card className="overflow-hidden hover-elevate cursor-pointer group h-full flex flex-col">
                     <div className="aspect-video w-full bg-muted relative overflow-hidden">
                       {product.imageUrl ? (
-                        <img 
-                          src={product.imageUrl} 
+                        <img
+                          src={product.imageUrl}
                           alt={product.title}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-secondary/30 text-secondary-foreground/30">
-                          {product.type === 'coupon' ? <Gift className="w-12 h-12" /> : <ShoppingBag className="w-12 h-12" />}
+                          {product.type === "coupon" ? <Gift className="w-12 h-12" /> : <ShoppingBag className="w-12 h-12" />}
                         </div>
                       )}
                       <div className="absolute top-2 right-2">
@@ -147,7 +149,7 @@ export default function Dashboard() {
                       <div className="mt-auto pt-4 border-t flex items-center justify-between">
                         <div className="flex items-center gap-1.5 font-bold text-primary">
                           <Hexagon className="w-4 h-4 fill-primary" />
-                          {product.pointPrice.toLocaleString()} pts
+                          {product.pointPrice.toLocaleString()} {t("common.pts")}
                         </div>
                       </div>
                     </CardContent>
@@ -156,7 +158,7 @@ export default function Dashboard() {
               ))
             ) : (
               <div className="col-span-2 py-12 text-center border-2 border-dashed rounded-2xl">
-                <p className="text-muted-foreground">No trending products right now.</p>
+                <p className="text-muted-foreground">{t("dashboard.noTrending")}</p>
               </div>
             )}
           </div>
@@ -164,12 +166,12 @@ export default function Dashboard() {
 
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold">Recent Activity</h2>
+            <h2 className="text-xl font-bold">{t("dashboard.recentActivity")}</h2>
             <Link href="/transactions">
-              <Button variant="ghost" size="sm" className="text-muted-foreground">View all</Button>
+              <Button variant="ghost" size="sm" className="text-muted-foreground">{t("dashboard.viewAll")}</Button>
             </Link>
           </div>
-          
+
           <Card className="overflow-hidden">
             <div className="divide-y">
               {loadingActivity ? (
@@ -188,8 +190,8 @@ export default function Dashboard() {
                     <Avatar className="w-10 h-10 border bg-background">
                       <AvatarImage src={item.actorAvatarUrl || ""} />
                       <AvatarFallback>
-                        {item.type === 'purchase' ? <ShoppingBag className="w-4 h-4" /> :
-                         item.type === 'transfer' ? <Send className="w-4 h-4" /> :
+                        {item.type === "purchase" ? <ShoppingBag className="w-4 h-4" /> :
+                         item.type === "transfer" ? <Send className="w-4 h-4" /> :
                          <Activity className="w-4 h-4" />}
                       </AvatarFallback>
                     </Avatar>
@@ -205,10 +207,10 @@ export default function Dashboard() {
                           <>
                             <span className="text-muted-foreground/30">•</span>
                             <span className={`text-xs font-bold flex items-center gap-1 ${
-                              item.type === 'purchase' || item.type === 'transfer' ? 'text-primary' : 'text-muted-foreground'
+                              item.type === "purchase" || item.type === "transfer" ? "text-primary" : "text-muted-foreground"
                             }`}>
                               <Hexagon className="w-3 h-3 fill-current" />
-                              {item.pointsAmount.toLocaleString()} pts
+                              {item.pointsAmount.toLocaleString()} {t("common.pts")}
                             </span>
                           </>
                         )}
@@ -218,7 +220,7 @@ export default function Dashboard() {
                 ))
               ) : (
                 <div className="p-8 text-center">
-                  <p className="text-muted-foreground text-sm">No recent activity.</p>
+                  <p className="text-muted-foreground text-sm">{t("dashboard.noRecentActivity")}</p>
                 </div>
               )}
             </div>

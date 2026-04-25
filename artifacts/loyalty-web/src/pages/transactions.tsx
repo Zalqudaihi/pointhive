@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useListTransactions, useGetCurrentUser } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,6 +11,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Transactions() {
+  const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<"purchase" | "transfer" | "exchange" | null>(null);
 
   const { data: currentUser } = useGetCurrentUser();
@@ -21,39 +23,39 @@ export default function Transactions() {
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500 pb-12">
       <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-end">
         <div>
-          <h1 className="text-3xl font-black tracking-tight">Activity</h1>
-          <p className="text-muted-foreground mt-1">Your recent transactions and point transfers.</p>
+          <h1 className="text-3xl font-black tracking-tight">{t("transactions.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("transactions.subtitle")}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        <Button 
-          variant={activeFilter === null ? "default" : "outline"} 
+        <Button
+          variant={activeFilter === null ? "default" : "outline"}
           onClick={() => setActiveFilter(null)}
           className="rounded-full"
         >
-          All Activity
+          {t("transactions.all")}
         </Button>
-        <Button 
-          variant={activeFilter === "purchase" ? "default" : "outline"} 
+        <Button
+          variant={activeFilter === "purchase" ? "default" : "outline"}
           onClick={() => setActiveFilter("purchase")}
           className="rounded-full"
         >
-          <ShoppingBag className="w-4 h-4 mr-2" /> Purchases
+          <ShoppingBag className="w-4 h-4 mr-2" /> {t("transactions.purchases")}
         </Button>
-        <Button 
-          variant={activeFilter === "transfer" ? "default" : "outline"} 
+        <Button
+          variant={activeFilter === "transfer" ? "default" : "outline"}
           onClick={() => setActiveFilter("transfer")}
           className="rounded-full"
         >
-          <Send className="w-4 h-4 mr-2" /> Transfers
+          <Send className="w-4 h-4 mr-2" /> {t("transactions.transfers")}
         </Button>
-        <Button 
-          variant={activeFilter === "exchange" ? "default" : "outline"} 
+        <Button
+          variant={activeFilter === "exchange" ? "default" : "outline"}
           onClick={() => setActiveFilter("exchange")}
           className="rounded-full"
         >
-          <Activity className="w-4 h-4 mr-2" /> System
+          <Activity className="w-4 h-4 mr-2" /> {t("transactions.system")}
         </Button>
       </div>
 
@@ -75,8 +77,10 @@ export default function Transactions() {
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <Activity className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-bold mb-1">No activity found</h3>
-          <p className="text-muted-foreground">When you buy, sell, or transfer points, it will show up here.</p>
+          <h3 className="text-lg font-bold mb-1">{t("transactions.noActivity")}</h3>
+          <p className="text-muted-foreground">
+            {t("transactions.noActivity")}
+          </p>
         </div>
       ) : (
         <Card className="divide-y border-border/50 shadow-sm overflow-hidden">
@@ -84,68 +88,64 @@ export default function Transactions() {
             <Link key={tx.id} href={`/transactions/${tx.id}`}>
               <div className="p-4 sm:p-6 hover:bg-muted/50 transition-colors flex items-center gap-4 group cursor-pointer">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                  tx.type === 'purchase' ? 'bg-primary/20 text-primary' : 
-                  tx.type === 'transfer' ? 'bg-blue-500/20 text-blue-500' : 
-                  'bg-orange-500/20 text-orange-500'
+                  tx.type === "purchase" ? "bg-primary/20 text-primary" :
+                  tx.type === "transfer" ? "bg-blue-500/20 text-blue-500" :
+                  "bg-orange-500/20 text-orange-500"
                 }`}>
-                  {tx.type === 'purchase' ? <ShoppingBag className="w-6 h-6" /> : 
-                   tx.type === 'transfer' ? <Send className="w-6 h-6" /> : 
+                  {tx.type === "purchase" ? <ShoppingBag className="w-6 h-6" /> :
+                   tx.type === "transfer" ? <Send className="w-6 h-6" /> :
                    <Activity className="w-6 h-6" />}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-bold text-foreground">
-                      {tx.type === 'purchase' ? 'Purchase' : 
-                       tx.type === 'transfer' ? 'Transfer' : 
-                       'Exchange'}
+                      {tx.type === "purchase" ? t("transactions.purchases") :
+                       tx.type === "transfer" ? t("transactions.transfers") :
+                       t("transactions.system")}
                     </span>
                     <Badge variant={
-                      tx.status === 'completed' ? 'secondary' : 
-                      tx.status === 'pending' ? 'outline' : 'destructive'
+                      tx.status === "completed" ? "secondary" :
+                      tx.status === "pending" ? "outline" : "destructive"
                     } className="text-[10px] uppercase tracking-wider py-0 px-1.5 h-4">
-                      {tx.status}
+                      {t(`common.${tx.status}` as `common.${typeof tx.status}`) || tx.status}
                     </Badge>
                   </div>
-                  
+
                   <p className="text-sm text-muted-foreground truncate">
                     {(() => {
                       const userId = currentUser?.id;
-                      if (tx.type === 'purchase') {
+                      if (tx.type === "purchase") {
                         const isBuyer = userId != null && tx.buyerId === userId;
-                        return isBuyer ? (
-                          <>You bought <span className="font-medium text-foreground">{tx.productTitle}</span> from {tx.sellerName}</>
-                        ) : (
-                          <>You sold <span className="font-medium text-foreground">{tx.productTitle}</span> to {tx.buyerName}</>
-                        );
+                        return isBuyer
+                          ? t("transactions.bought", { product: tx.productTitle, seller: tx.sellerName })
+                          : t("transactions.sold", { product: tx.productTitle, buyer: tx.buyerName });
                       }
-                      if (tx.type === 'transfer') {
+                      if (tx.type === "transfer") {
                         const isSender = userId != null && tx.sellerId === userId;
-                        return isSender ? (
-                          <>Sent to <span className="font-medium text-foreground">{tx.buyerName}</span></>
-                        ) : (
-                          <>Received from <span className="font-medium text-foreground">{tx.sellerName}</span></>
-                        );
+                        return isSender
+                          ? t("transactions.sent", { name: tx.buyerName })
+                          : t("transactions.received", { name: tx.sellerName });
                       }
-                      return <>System exchange</>;
+                      return t("transactions.exchange");
                     })()}
                   </p>
                 </div>
-                
+
                 <div className="text-right shrink-0 flex flex-col items-end">
                   {(() => {
                     const userId = currentUser?.id;
                     let isOutgoing = false;
-                    if (tx.type === 'purchase') {
+                    if (tx.type === "purchase") {
                       isOutgoing = userId != null && tx.buyerId === userId;
-                    } else if (tx.type === 'transfer') {
+                    } else if (tx.type === "transfer") {
                       isOutgoing = userId != null && tx.sellerId === userId;
                     }
                     return (
                       <div className={`font-black flex items-center gap-1 text-lg ${
-                        isOutgoing ? 'text-destructive' : 'text-primary'
+                        isOutgoing ? "text-destructive" : "text-primary"
                       }`}>
-                        {isOutgoing ? '-' : '+'}{tx.pointsAmount.toLocaleString()}
+                        {isOutgoing ? "-" : "+"}{tx.pointsAmount.toLocaleString()}
                         <Hexagon className="w-4 h-4 fill-current" />
                       </div>
                     );
@@ -154,8 +154,8 @@ export default function Transactions() {
                     {formatDistanceToNow(new Date(tx.createdAt), { addSuffix: true })}
                   </span>
                 </div>
-                
-                <ArrowRight className="w-5 h-5 text-muted-foreground opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all shrink-0 hidden sm:block" />
+
+                <ArrowRight className="w-5 h-5 text-muted-foreground opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all shrink-0 hidden sm:block rtl:rotate-180" />
               </div>
             </Link>
           ))}

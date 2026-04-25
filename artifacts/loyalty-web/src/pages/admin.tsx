@@ -9,11 +9,13 @@ import {
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Hexagon, Users, Package, Activity, TrendingUp, DollarSign, ShieldAlert, Award } from "lucide-react";
+import { Hexagon, Users, Package, Activity, Award, ShieldAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 export default function Admin() {
+  const { t } = useTranslation();
   const { data: user, isLoading: loadingUser } = useGetCurrentUser();
   const { data: overview, isLoading: loadingOverview } = useGetAdminOverview({
     query: { queryKey: getGetAdminOverviewQueryKey(), enabled: user?.role === 'admin' }
@@ -35,10 +37,8 @@ export default function Admin() {
         <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
           <ShieldAlert className="w-8 h-8 text-destructive" />
         </div>
-        <h2 className="text-2xl font-bold">Access Denied</h2>
-        <p className="text-muted-foreground">
-          This area is restricted to hive administrators. You don't have the necessary permissions to view these platform statistics.
-        </p>
+        <h2 className="text-2xl font-bold">{t("admin.accessDenied")}</h2>
+        <p className="text-muted-foreground">{t("admin.accessDeniedDesc")}</p>
       </div>
     );
   }
@@ -46,8 +46,8 @@ export default function Admin() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">Hive Command Center</h1>
-        <p className="text-muted-foreground mt-1">Platform overview and administrative metrics.</p>
+        <h1 className="text-3xl font-black tracking-tight">{t("admin.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("admin.subtitle")}</p>
       </div>
 
       {loadingOverview ? (
@@ -58,45 +58,45 @@ export default function Admin() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="hover-elevate bg-primary/10 border-primary/20">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-primary font-bold text-sm">Total Users</CardTitle>
+              <CardTitle className="text-primary font-bold text-sm">{t("admin.totalUsers")}</CardTitle>
               <Users className="w-4 h-4 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-black text-primary">{overview.totalUsers.toLocaleString()}</div>
-              <p className="text-xs text-primary/70 mt-1 font-medium">+{overview.newUsers7d} this week</p>
+              <p className="text-xs text-primary/70 mt-1 font-medium">{t("admin.thisWeek", { n: overview.newUsers7d })}</p>
             </CardContent>
           </Card>
 
           <Card className="hover-elevate">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-muted-foreground font-medium text-sm">Points Circulating</CardTitle>
+              <CardTitle className="text-muted-foreground font-medium text-sm">{t("admin.pointsCirculating")}</CardTitle>
               <Hexagon className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{overview.pointsCirculated.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">Across all wallets</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("admin.acrossWallets")}</p>
             </CardContent>
           </Card>
 
           <Card className="hover-elevate">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-muted-foreground font-medium text-sm">Active Listings</CardTitle>
+              <CardTitle className="text-muted-foreground font-medium text-sm">{t("admin.activeListings")}</CardTitle>
               <Package className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{overview.activeListings.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">Of {overview.totalListings} total</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("admin.totalListings")} {overview.totalListings}</p>
             </CardContent>
           </Card>
 
           <Card className="hover-elevate bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-blue-700 dark:text-blue-400 font-medium text-sm">30d Volume</CardTitle>
+              <CardTitle className="text-blue-700 dark:text-blue-400 font-medium text-sm">{t("admin.transactions7d")}</CardTitle>
               <Activity className="w-4 h-4 text-blue-700 dark:text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{overview.transactions30d.toLocaleString()} txs</div>
-              <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">{overview.transactions7d} this week</p>
+              <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{overview.transactions7d.toLocaleString()}</div>
+              <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">{t("admin.vs30d", { n: overview.transactions30d })}</p>
             </CardContent>
           </Card>
         </div>
@@ -104,7 +104,7 @@ export default function Admin() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <h2 className="text-xl font-bold">Platform Activity</h2>
+          <h2 className="text-xl font-bold">{t("admin.recentActivity")}</h2>
           
           <Card className="overflow-hidden">
             <div className="divide-y">
@@ -140,7 +140,7 @@ export default function Admin() {
                             <span className="text-muted-foreground/30">•</span>
                             <span className="text-xs font-bold flex items-center gap-1 text-muted-foreground">
                               <Hexagon className="w-3 h-3 fill-current" />
-                              {item.pointsAmount.toLocaleString()} pts
+                              {item.pointsAmount.toLocaleString()} {t("common.pts")}
                             </span>
                           </>
                         )}
@@ -149,7 +149,7 @@ export default function Admin() {
                   </div>
                 ))
               ) : (
-                <div className="p-8 text-center text-muted-foreground">No recent platform activity.</div>
+                <div className="p-8 text-center text-muted-foreground">{t("admin.noActivity")}</div>
               )}
             </div>
           </Card>
@@ -158,7 +158,7 @@ export default function Admin() {
         <div className="space-y-6">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Award className="w-5 h-5 text-primary" />
-            Top Sellers
+            {t("admin.topSellers")}
           </h2>
           
           <Card className="overflow-hidden">
@@ -182,9 +182,9 @@ export default function Admin() {
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-sm truncate">{seller.name}</div>
-                      <div className="text-xs text-muted-foreground">{seller.totalSales} sales</div>
+                      <div className="text-xs text-muted-foreground">{t("admin.sales", { n: seller.totalSales })}</div>
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="text-right rtl:text-left shrink-0">
                       <div className="text-sm font-bold text-primary flex items-center gap-1">
                         <Hexagon className="w-3 h-3 fill-primary" />
                         {seller.pointsEarned.toLocaleString()}
@@ -193,7 +193,7 @@ export default function Admin() {
                   </div>
                 ))
               ) : (
-                <div className="p-8 text-center text-muted-foreground">No sales data yet.</div>
+                <div className="p-8 text-center text-muted-foreground">{t("admin.noSellers")}</div>
               )}
             </div>
           </Card>
