@@ -25,6 +25,8 @@ export interface User {
   email: string;
   name: string;
   /** @nullable */
+  phone?: string | null;
+  /** @nullable */
   avatarUrl?: string | null;
   /** @nullable */
   bio?: string | null;
@@ -35,6 +37,8 @@ export interface User {
 
 export interface UpdateUserBody {
   name?: string;
+  /** @nullable */
+  phone?: string | null;
   /** @nullable */
   bio?: string | null;
   /** @nullable */
@@ -267,6 +271,71 @@ export interface TopSeller {
   avatarUrl?: string | null;
   totalSales: number;
   pointsEarned: number;
+}
+
+export interface Beneficiary {
+  id: number;
+  userId: number;
+  beneficiaryId: number;
+  beneficiaryName: string;
+  /** @nullable */
+  beneficiaryPhone?: string | null;
+  /** @nullable */
+  beneficiaryAvatarUrl?: string | null;
+  /** @nullable */
+  nickname?: string | null;
+  createdAt: string;
+}
+
+export interface AddBeneficiaryBody {
+  beneficiaryId: number;
+  /** @nullable */
+  nickname?: string | null;
+}
+
+export type PointVoucherStatus =
+  (typeof PointVoucherStatus)[keyof typeof PointVoucherStatus];
+
+export const PointVoucherStatus = {
+  active: "active",
+  redeemed: "redeemed",
+  transferred: "transferred",
+} as const;
+
+export interface PointVoucher {
+  id: number;
+  code: string;
+  issuerUserId: number;
+  issuerName: string;
+  /** @nullable */
+  holderUserId?: number | null;
+  /** @nullable */
+  holderName?: string | null;
+  pointsValue: number;
+  /** @nullable */
+  note?: string | null;
+  status: PointVoucherStatus;
+  /** @nullable */
+  expiresAt?: string | null;
+  /** @nullable */
+  redeemedAt?: string | null;
+  createdAt: string;
+}
+
+export interface CreateVoucherBody {
+  pointsValue: number;
+  /** @nullable */
+  note?: string | null;
+  /** @nullable */
+  expiresAt?: string | null;
+}
+
+export interface RedeemVoucherBody {
+  code: string;
+}
+
+export interface TransferVoucherBody {
+  recipientId: number;
 }
 
 export type ListUsersParams = {

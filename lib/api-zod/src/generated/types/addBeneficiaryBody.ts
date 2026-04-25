@@ -6,12 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UpdateUserBody {
-  name?: string;
+export interface AddBeneficiaryBody {
+  beneficiaryId: number;
   /** @nullable */
-  phone?: string | null;
-  /** @nullable */
-  bio?: string | null;
-  /** @nullable */
-  avatarUrl?: string | null;
+  nickname?: string | null;
 }

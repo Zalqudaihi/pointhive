@@ -24,11 +24,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Hexagon, Save, Loader2, Camera, UserCircle } from "lucide-react";
+import { Hexagon, Save, Loader2, Camera, UserCircle, Phone } from "lucide-react";
 import { format } from "date-fns";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
+  phone: z.string().optional().or(z.literal("")),
   bio: z.string().max(160, "Bio must be under 160 characters").optional().or(z.literal("")),
   avatarUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
@@ -48,6 +49,7 @@ export default function Profile() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: "",
+      phone: "",
       bio: "",
       avatarUrl: "",
     },
@@ -57,6 +59,7 @@ export default function Profile() {
     if (user) {
       form.reset({
         name: user.name || "",
+        phone: user.phone || "",
         bio: user.bio || "",
         avatarUrl: user.avatarUrl || "",
       });
@@ -69,6 +72,7 @@ export default function Profile() {
       await updateProfile.mutateAsync({
         data: {
           name: values.name,
+          phone: values.phone || null,
           bio: values.bio || null,
           avatarUrl: values.avatarUrl || null,
         },
@@ -153,6 +157,24 @@ export default function Profile() {
                       <FormControl>
                         <Input placeholder={t("profile.displayNamePlaceholder")} {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        {t("phone.label")}
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder={t("phone.placeholder")} type="tel" {...field} />
+                      </FormControl>
+                      <FormDescription>{t("phone.desc")}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

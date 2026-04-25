@@ -32,6 +32,8 @@ import {
   Shield,
   User as UserIcon,
   Globe,
+  Users,
+  Ticket,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import i18n from "@/i18n";
@@ -118,6 +120,16 @@ export function Layout({ children }: { children: ReactNode }) {
       href: "/transactions",
       label: t("nav.activity"),
       icon: <History className="w-4 h-4" />,
+    },
+    {
+      href: "/friends",
+      label: t("nav.friends"),
+      icon: <Users className="w-4 h-4" />,
+    },
+    {
+      href: "/vouchers",
+      label: t("nav.vouchers"),
+      icon: <Ticket className="w-4 h-4" />,
     },
   ];
 

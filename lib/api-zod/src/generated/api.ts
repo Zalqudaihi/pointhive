@@ -21,6 +21,7 @@ export const GetCurrentUserResponse = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
+  phone: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
   bio: zod.string().nullish(),
   role: zod.enum(["user", "admin"]),
@@ -33,6 +34,7 @@ export const GetCurrentUserResponse = zod.object({
  */
 export const UpdateCurrentUserBody = zod.object({
   name: zod.string().optional(),
+  phone: zod.string().nullish(),
   bio: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
 });
@@ -41,6 +43,7 @@ export const UpdateCurrentUserResponse = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
+  phone: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
   bio: zod.string().nullish(),
   role: zod.enum(["user", "admin"]),
@@ -59,6 +62,7 @@ export const ListUsersResponseItem = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
+  phone: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
   bio: zod.string().nullish(),
   role: zod.enum(["user", "admin"]),
@@ -78,6 +82,7 @@ export const GetUserResponse = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
+  phone: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
   bio: zod.string().nullish(),
   role: zod.enum(["user", "admin"]),
@@ -421,3 +426,111 @@ export const GetTopSellersResponseItem = zod.object({
   pointsEarned: zod.number(),
 });
 export const GetTopSellersResponse = zod.array(GetTopSellersResponseItem);
+
+/**
+ * @summary List the current user's friends/beneficiaries
+ */
+export const ListBeneficiariesResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  beneficiaryId: zod.number(),
+  beneficiaryName: zod.string(),
+  beneficiaryPhone: zod.string().nullish(),
+  beneficiaryAvatarUrl: zod.string().nullish(),
+  nickname: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const ListBeneficiariesResponse = zod.array(
+  ListBeneficiariesResponseItem,
+);
+
+/**
+ * @summary Add a friend/beneficiary
+ */
+export const AddBeneficiaryBody = zod.object({
+  beneficiaryId: zod.number(),
+  nickname: zod.string().nullish(),
+});
+
+/**
+ * @summary Remove a friend/beneficiary
+ */
+export const RemoveBeneficiaryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List vouchers issued by or held by the current user
+ */
+export const ListVouchersResponseItem = zod.object({
+  id: zod.number(),
+  code: zod.string(),
+  issuerUserId: zod.number(),
+  issuerName: zod.string(),
+  holderUserId: zod.number().nullish(),
+  holderName: zod.string().nullish(),
+  pointsValue: zod.number(),
+  note: zod.string().nullish(),
+  status: zod.enum(["active", "redeemed", "transferred"]),
+  expiresAt: zod.coerce.date().nullish(),
+  redeemedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const ListVouchersResponse = zod.array(ListVouchersResponseItem);
+
+/**
+ * @summary Create a point voucher (spend points to generate a shareable code)
+ */
+export const CreateVoucherBody = zod.object({
+  pointsValue: zod.number(),
+  note: zod.string().nullish(),
+  expiresAt: zod.coerce.date().nullish(),
+});
+
+/**
+ * @summary Redeem a voucher code to claim points
+ */
+export const RedeemVoucherBody = zod.object({
+  code: zod.string(),
+});
+
+export const RedeemVoucherResponse = zod.object({
+  id: zod.number(),
+  code: zod.string(),
+  issuerUserId: zod.number(),
+  issuerName: zod.string(),
+  holderUserId: zod.number().nullish(),
+  holderName: zod.string().nullish(),
+  pointsValue: zod.number(),
+  note: zod.string().nullish(),
+  status: zod.enum(["active", "redeemed", "transferred"]),
+  expiresAt: zod.coerce.date().nullish(),
+  redeemedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Transfer a voucher to another user
+ */
+export const TransferVoucherParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const TransferVoucherBody = zod.object({
+  recipientId: zod.number(),
+});
+
+export const TransferVoucherResponse = zod.object({
+  id: zod.number(),
+  code: zod.string(),
+  issuerUserId: zod.number(),
+  issuerName: zod.string(),
+  holderUserId: zod.number().nullish(),
+  holderName: zod.string().nullish(),
+  pointsValue: zod.number(),
+  note: zod.string().nullish(),
+  status: zod.enum(["active", "redeemed", "transferred"]),
+  expiresAt: zod.coerce.date().nullish(),
+  redeemedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});

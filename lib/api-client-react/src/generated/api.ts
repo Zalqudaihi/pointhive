@@ -18,8 +18,11 @@ import type {
 
 import type {
   ActivityItem,
+  AddBeneficiaryBody,
   AdminOverview,
+  Beneficiary,
   CategoryCount,
+  CreateVoucherBody,
   DashboardSummary,
   ErrorResponse,
   HealthStatus,
@@ -29,12 +32,15 @@ import type {
   MarkAllReadResponse,
   NewProduct,
   Notification,
+  PointVoucher,
   Product,
   ProductUpdate,
   PurchaseBody,
+  RedeemVoucherBody,
   TopSeller,
   Transaction,
   TransferBody,
+  TransferVoucherBody,
   UpdateUserBody,
   User,
 } from "./api.schemas";
@@ -2012,3 +2018,582 @@ export function useGetTopSellers<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List the current user's friends/beneficiaries
+ */
+export const getListBeneficiariesUrl = () => {
+  return `/api/beneficiaries`;
+};
+
+export const listBeneficiaries = async (
+  options?: RequestInit,
+): Promise<Beneficiary[]> => {
+  return customFetch<Beneficiary[]>(getListBeneficiariesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListBeneficiariesQueryKey = () => {
+  return [`/api/beneficiaries`] as const;
+};
+
+export const getListBeneficiariesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listBeneficiaries>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listBeneficiaries>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListBeneficiariesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listBeneficiaries>>
+  > = ({ signal }) => listBeneficiaries({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listBeneficiaries>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListBeneficiariesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listBeneficiaries>>
+>;
+export type ListBeneficiariesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List the current user's friends/beneficiaries
+ */
+
+export function useListBeneficiaries<
+  TData = Awaited<ReturnType<typeof listBeneficiaries>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listBeneficiaries>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListBeneficiariesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add a friend/beneficiary
+ */
+export const getAddBeneficiaryUrl = () => {
+  return `/api/beneficiaries`;
+};
+
+export const addBeneficiary = async (
+  addBeneficiaryBody: AddBeneficiaryBody,
+  options?: RequestInit,
+): Promise<Beneficiary> => {
+  return customFetch<Beneficiary>(getAddBeneficiaryUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(addBeneficiaryBody),
+  });
+};
+
+export const getAddBeneficiaryMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addBeneficiary>>,
+    TError,
+    { data: BodyType<AddBeneficiaryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addBeneficiary>>,
+  TError,
+  { data: BodyType<AddBeneficiaryBody> },
+  TContext
+> => {
+  const mutationKey = ["addBeneficiary"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addBeneficiary>>,
+    { data: BodyType<AddBeneficiaryBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return addBeneficiary(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddBeneficiaryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addBeneficiary>>
+>;
+export type AddBeneficiaryMutationBody = BodyType<AddBeneficiaryBody>;
+export type AddBeneficiaryMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Add a friend/beneficiary
+ */
+export const useAddBeneficiary = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addBeneficiary>>,
+    TError,
+    { data: BodyType<AddBeneficiaryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof addBeneficiary>>,
+  TError,
+  { data: BodyType<AddBeneficiaryBody> },
+  TContext
+> => {
+  return useMutation(getAddBeneficiaryMutationOptions(options));
+};
+
+/**
+ * @summary Remove a friend/beneficiary
+ */
+export const getRemoveBeneficiaryUrl = (id: number) => {
+  return `/api/beneficiaries/${id}`;
+};
+
+export const removeBeneficiary = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getRemoveBeneficiaryUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRemoveBeneficiaryMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeBeneficiary>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeBeneficiary>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["removeBeneficiary"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeBeneficiary>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return removeBeneficiary(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveBeneficiaryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeBeneficiary>>
+>;
+
+export type RemoveBeneficiaryMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Remove a friend/beneficiary
+ */
+export const useRemoveBeneficiary = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeBeneficiary>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof removeBeneficiary>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getRemoveBeneficiaryMutationOptions(options));
+};
+
+/**
+ * @summary List vouchers issued by or held by the current user
+ */
+export const getListVouchersUrl = () => {
+  return `/api/vouchers`;
+};
+
+export const listVouchers = async (
+  options?: RequestInit,
+): Promise<PointVoucher[]> => {
+  return customFetch<PointVoucher[]>(getListVouchersUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListVouchersQueryKey = () => {
+  return [`/api/vouchers`] as const;
+};
+
+export const getListVouchersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listVouchers>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listVouchers>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListVouchersQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listVouchers>>> = ({
+    signal,
+  }) => listVouchers({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listVouchers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListVouchersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listVouchers>>
+>;
+export type ListVouchersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List vouchers issued by or held by the current user
+ */
+
+export function useListVouchers<
+  TData = Awaited<ReturnType<typeof listVouchers>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listVouchers>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListVouchersQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a point voucher (spend points to generate a shareable code)
+ */
+export const getCreateVoucherUrl = () => {
+  return `/api/vouchers`;
+};
+
+export const createVoucher = async (
+  createVoucherBody: CreateVoucherBody,
+  options?: RequestInit,
+): Promise<PointVoucher> => {
+  return customFetch<PointVoucher>(getCreateVoucherUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createVoucherBody),
+  });
+};
+
+export const getCreateVoucherMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createVoucher>>,
+    TError,
+    { data: BodyType<CreateVoucherBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createVoucher>>,
+  TError,
+  { data: BodyType<CreateVoucherBody> },
+  TContext
+> => {
+  const mutationKey = ["createVoucher"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createVoucher>>,
+    { data: BodyType<CreateVoucherBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createVoucher(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateVoucherMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createVoucher>>
+>;
+export type CreateVoucherMutationBody = BodyType<CreateVoucherBody>;
+export type CreateVoucherMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Create a point voucher (spend points to generate a shareable code)
+ */
+export const useCreateVoucher = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createVoucher>>,
+    TError,
+    { data: BodyType<CreateVoucherBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createVoucher>>,
+  TError,
+  { data: BodyType<CreateVoucherBody> },
+  TContext
+> => {
+  return useMutation(getCreateVoucherMutationOptions(options));
+};
+
+/**
+ * @summary Redeem a voucher code to claim points
+ */
+export const getRedeemVoucherUrl = () => {
+  return `/api/vouchers/redeem`;
+};
+
+export const redeemVoucher = async (
+  redeemVoucherBody: RedeemVoucherBody,
+  options?: RequestInit,
+): Promise<PointVoucher> => {
+  return customFetch<PointVoucher>(getRedeemVoucherUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(redeemVoucherBody),
+  });
+};
+
+export const getRedeemVoucherMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof redeemVoucher>>,
+    TError,
+    { data: BodyType<RedeemVoucherBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof redeemVoucher>>,
+  TError,
+  { data: BodyType<RedeemVoucherBody> },
+  TContext
+> => {
+  const mutationKey = ["redeemVoucher"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof redeemVoucher>>,
+    { data: BodyType<RedeemVoucherBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return redeemVoucher(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RedeemVoucherMutationResult = NonNullable<
+  Awaited<ReturnType<typeof redeemVoucher>>
+>;
+export type RedeemVoucherMutationBody = BodyType<RedeemVoucherBody>;
+export type RedeemVoucherMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Redeem a voucher code to claim points
+ */
+export const useRedeemVoucher = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof redeemVoucher>>,
+    TError,
+    { data: BodyType<RedeemVoucherBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof redeemVoucher>>,
+  TError,
+  { data: BodyType<RedeemVoucherBody> },
+  TContext
+> => {
+  return useMutation(getRedeemVoucherMutationOptions(options));
+};
+
+/**
+ * @summary Transfer a voucher to another user
+ */
+export const getTransferVoucherUrl = (id: number) => {
+  return `/api/vouchers/${id}/transfer`;
+};
+
+export const transferVoucher = async (
+  id: number,
+  transferVoucherBody: TransferVoucherBody,
+  options?: RequestInit,
+): Promise<PointVoucher> => {
+  return customFetch<PointVoucher>(getTransferVoucherUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(transferVoucherBody),
+  });
+};
+
+export const getTransferVoucherMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof transferVoucher>>,
+    TError,
+    { id: number; data: BodyType<TransferVoucherBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof transferVoucher>>,
+  TError,
+  { id: number; data: BodyType<TransferVoucherBody> },
+  TContext
+> => {
+  const mutationKey = ["transferVoucher"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof transferVoucher>>,
+    { id: number; data: BodyType<TransferVoucherBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return transferVoucher(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TransferVoucherMutationResult = NonNullable<
+  Awaited<ReturnType<typeof transferVoucher>>
+>;
+export type TransferVoucherMutationBody = BodyType<TransferVoucherBody>;
+export type TransferVoucherMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Transfer a voucher to another user
+ */
+export const useTransferVoucher = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof transferVoucher>>,
+    TError,
+    { id: number; data: BodyType<TransferVoucherBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof transferVoucher>>,
+  TError,
+  { id: number; data: BodyType<TransferVoucherBody> },
+  TContext
+> => {
+  return useMutation(getTransferVoucherMutationOptions(options));
+};

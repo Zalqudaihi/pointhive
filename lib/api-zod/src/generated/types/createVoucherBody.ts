@@ -6,12 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UpdateUserBody {
-  name?: string;
+export interface CreateVoucherBody {
+  pointsValue: number;
   /** @nullable */
-  phone?: string | null;
+  note?: string | null;
   /** @nullable */
-  bio?: string | null;
-  /** @nullable */
-  avatarUrl?: string | null;
+  expiresAt?: Date | null;
 }

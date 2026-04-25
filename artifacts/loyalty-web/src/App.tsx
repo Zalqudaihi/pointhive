@@ -17,6 +17,8 @@ import TransactionDetail from "@/pages/transaction-detail";
 import Notifications from "@/pages/notifications";
 import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
+import Friends from "@/pages/friends";
+import Vouchers from "@/pages/vouchers";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +68,12 @@ function Router() {
       </Route>
       <Route path="/admin">
         <Layout><Admin /></Layout>
+      </Route>
+      <Route path="/friends">
+        <Layout><Friends /></Layout>
+      </Route>
+      <Route path="/vouchers">
+        <Layout><Vouchers /></Layout>
       </Route>
       <Route component={NotFound} />
     </Switch>

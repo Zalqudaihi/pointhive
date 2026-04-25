@@ -5,19 +5,17 @@
  * Loyalty points & marketplace platform API
  * OpenAPI spec version: 0.1.0
  */
-import type { UserRole } from "./userRole";
 
-export interface User {
+export interface Beneficiary {
   id: number;
-  email: string;
-  name: string;
+  userId: number;
+  beneficiaryId: number;
+  beneficiaryName: string;
   /** @nullable */
-  phone?: string | null;
+  beneficiaryPhone?: string | null;
   /** @nullable */
-  avatarUrl?: string | null;
+  beneficiaryAvatarUrl?: string | null;
   /** @nullable */
-  bio?: string | null;
-  role: UserRole;
-  pointsBalance: number;
+  nickname?: string | null;
   createdAt: Date;
 }

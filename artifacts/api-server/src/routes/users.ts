@@ -28,6 +28,7 @@ router.patch("/users/me", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const updates: Record<string, unknown> = {};
   if (parsed.data.name !== undefined) updates.name = parsed.data.name;
+  if (parsed.data.phone !== undefined) updates.phone = parsed.data.phone;
   if (parsed.data.bio !== undefined) updates.bio = parsed.data.bio;
   if (parsed.data.avatarUrl !== undefined) updates.avatarUrl = parsed.data.avatarUrl;
   const [updated] = await db

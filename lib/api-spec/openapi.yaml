@@ -22,6 +22,10 @@ tags:
     description: Personalized dashboard data
   - name: admin
     description: Platform-wide admin views
+  - name: beneficiaries
+    description: Friends / beneficiary contacts
+  - name: vouchers
+    description: Point vouchers (convert & redeem points)
 
 paths:
   /healthz:
@@ -341,7 +345,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/MarkAllReadResponse" }
 
-  # --- Dashboard (wow endpoints) ---
+  # --- Dashboard ---
   /dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -380,7 +384,7 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/Product" }
 
-  # --- Admin (wow endpoints) ---
+  # --- Admin ---
   /admin/overview:
     get:
       operationId: getAdminOverview
@@ -419,6 +423,136 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/TopSeller" }
 
+  # --- Beneficiaries ---
+  /beneficiaries:
+    get:
+      operationId: listBeneficiaries
+      tags: [beneficiaries]
+      summary: List the current user's friends/beneficiaries
+      responses:
+        "200":
+          description: Beneficiaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Beneficiary" }
+    post:
+      operationId: addBeneficiary
+      tags: [beneficiaries]
+      summary: Add a friend/beneficiary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddBeneficiaryBody" }
+      responses:
+        "201":
+          description: Added
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Beneficiary" }
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /beneficiaries/{id}:
+    delete:
+      operationId: removeBeneficiary
+      tags: [beneficiaries]
+      summary: Remove a friend/beneficiary
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Removed
+
+  # --- Point Vouchers ---
+  /vouchers:
+    get:
+      operationId: listVouchers
+      tags: [vouchers]
+      summary: List vouchers issued by or held by the current user
+      responses:
+        "200":
+          description: Vouchers
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PointVoucher" }
+    post:
+      operationId: createVoucher
+      tags: [vouchers]
+      summary: Create a point voucher (spend points to generate a shareable code)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateVoucherBody" }
+      responses:
+        "201":
+          description: Voucher created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PointVoucher" }
+        "400":
+          description: Insufficient points or bad request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /vouchers/redeem:
+    post:
+      operationId: redeemVoucher
+      tags: [vouchers]
+      summary: Redeem a voucher code to claim points
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RedeemVoucherBody" }
+      responses:
+        "200":
+          description: Redeemed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PointVoucher" }
+        "400":
+          description: Invalid or already redeemed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /vouchers/{id}/transfer:
+    post:
+      operationId: transferVoucher
+      tags: [vouchers]
+      summary: Transfer a voucher to another user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TransferVoucherBody" }
+      responses:
+        "200":
+          description: Transferred
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PointVoucher" }
+        "400":
+          description: Not owner or bad request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
 components:
   schemas:
     HealthStatus:
@@ -439,6 +573,8 @@ components:
         id: { type: integer }
         email: { type: string }
         name: { type: string }
+        phone:
+          type: ["string", "null"]
         avatarUrl:
           type: ["string", "null"]
         bio:
@@ -452,6 +588,8 @@ components:
       type: object
       properties:
         name: { type: string }
+        phone:
+          type: ["string", "null"]
         bio:
           type: ["string", "null"]
         avatarUrl:
@@ -667,3 +805,74 @@ components:
         totalSales: { type: integer }
         pointsEarned: { type: integer }
       required: [userId, name, totalSales, pointsEarned]
+
+    Beneficiary:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        beneficiaryId: { type: integer }
+        beneficiaryName: { type: string }
+        beneficiaryPhone:
+          type: ["string", "null"]
+        beneficiaryAvatarUrl:
+          type: ["string", "null"]
+        nickname:
+          type: ["string", "null"]
+        createdAt: { type: string, format: date-time }
+      required: [id, userId, beneficiaryId, beneficiaryName, createdAt]
+
+    AddBeneficiaryBody:
+      type: object
+      properties:
+        beneficiaryId: { type: integer }
+        nickname:
+          type: ["string", "null"]
+      required: [beneficiaryId]
+
+    PointVoucher:
+      type: object
+      properties:
+        id: { type: integer }
+        code: { type: string }
+        issuerUserId: { type: integer }
+        issuerName: { type: string }
+        holderUserId:
+          type: ["integer", "null"]
+        holderName:
+          type: ["string", "null"]
+        pointsValue: { type: integer }
+        note:
+          type: ["string", "null"]
+        status: { type: string, enum: [active, redeemed, transferred] }
+        expiresAt:
+          type: ["string", "null"]
+          format: date-time
+        redeemedAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt: { type: string, format: date-time }
+      required: [id, code, issuerUserId, issuerName, pointsValue, status, createdAt]
+
+    CreateVoucherBody:
+      type: object
+      properties:
+        pointsValue: { type: integer }
+        note:
+          type: ["string", "null"]
+        expiresAt:
+          type: ["string", "null"]
+          format: date-time
+      required: [pointsValue]
+
+    RedeemVoucherBody:
+      type: object
+      properties:
+        code: { type: string }
+      required: [code]
+
+    TransferVoucherBody:
+      type: object
+      properties:
+        recipientId: { type: integer }
+      required: [recipientId]
