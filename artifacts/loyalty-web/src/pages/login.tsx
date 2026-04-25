@@ -1,34 +1,35 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
-import { useListUsers, useGetCurrentUser, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Hexagon, ArrowRight, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import loginBg from "@/assets/images/login-bg.png";
 
+type DemoIdentity = {
+  id: number;
+  name: string;
+  role: "user" | "admin";
+  avatarUrl: string;
+  tagline: string;
+};
+
+// Demo identities mirror the seeded users. This page does NOT call the API
+// because the API requires an authenticated identity and login is the only
+// place where the user has not yet picked one. Real auth (Clerk/OIDC) would
+// replace this list with a hosted sign-in page.
+const DEMO_IDENTITIES: DemoIdentity[] = [
+  { id: 1, name: "Zoe Tanaka", role: "admin", avatarUrl: "/seed/avatar1.png", tagline: "Hive admin" },
+  { id: 2, name: "Marcus Reyes", role: "user", avatarUrl: "/seed/avatar2.png", tagline: "Vintage seller" },
+  { id: 3, name: "Priya Bennett", role: "user", avatarUrl: "/seed/avatar3.png", tagline: "Plant parent" },
+  { id: 4, name: "Sam Okafor", role: "user", avatarUrl: "/seed/avatar4.png", tagline: "Coupon collector" },
+];
+
 export default function Login() {
-  const [, setLocation] = useLocation();
   const [loadingId, setLoadingId] = useState<number | null>(null);
-
-  const { data: users, isLoading } = useListUsers();
-  
-  // If we already have a user, redirect to dashboard
-  const { data: currentUser } = useGetCurrentUser({
-    query: { queryKey: getGetCurrentUserQueryKey(), retry: false }
-  });
-
-  if (currentUser && !loadingId) {
-    setLocation("/");
-    return null;
-  }
 
   const handleSelectUser = (id: number) => {
     setLoadingId(id);
     localStorage.setItem("pointhive.userId", String(id));
-    // Wait briefly so local storage takes effect
     setTimeout(() => {
-      window.location.href = "/";
+      window.location.href = import.meta.env.BASE_URL;
     }, 300);
   };
 
@@ -74,54 +75,43 @@ export default function Login() {
             <p className="text-muted-foreground">Select a demo identity to explore the app.</p>
           </div>
 
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-4 text-muted-foreground">
-              <Loader2 className="w-8 h-8 animate-spin" />
-              <p>Loading identities...</p>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {users?.map((u) => (
-                <button
-                  key={u.id}
-                  onClick={() => handleSelectUser(u.id)}
-                  disabled={loadingId !== null}
-                  className={`group relative flex items-center gap-4 p-4 rounded-2xl border bg-card text-left transition-all duration-300 hover:shadow-md hover:border-primary/50 disabled:opacity-70 disabled:cursor-not-allowed
-                    ${loadingId === u.id ? 'ring-2 ring-primary scale-[0.98]' : 'hover:-translate-y-1'}`}
-                >
-                  <Avatar className="w-14 h-14 border-2 border-background shadow-sm">
-                    <AvatarImage src={u.avatarUrl || ""} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-                      {u.name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 overflow-hidden">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold truncate">{u.name}</h3>
-                      {u.role === 'admin' && (
-                        <span className="px-2 py-0.5 text-[10px] uppercase font-bold bg-primary/20 text-primary rounded-full">
-                          Admin
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate">{u.email}</p>
-                    <div className="flex items-center gap-1 mt-2 text-xs font-semibold text-primary">
-                      <Hexagon className="w-3 h-3 fill-primary" />
-                      {u.pointsBalance.toLocaleString()} pts
-                    </div>
-                  </div>
-                  
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    {loadingId === u.id ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <ArrowRight className="w-5 h-5" />
+          <div className="grid gap-4">
+            {DEMO_IDENTITIES.map((u) => (
+              <button
+                key={u.id}
+                onClick={() => handleSelectUser(u.id)}
+                disabled={loadingId !== null}
+                className={`group relative flex items-center gap-4 p-4 rounded-2xl border bg-card text-left transition-all duration-300 hover:shadow-md hover:border-primary/50 disabled:opacity-70 disabled:cursor-not-allowed
+                  ${loadingId === u.id ? 'ring-2 ring-primary scale-[0.98]' : 'hover:-translate-y-1'}`}
+              >
+                <Avatar className="w-14 h-14 border-2 border-background shadow-sm">
+                  <AvatarImage src={u.avatarUrl} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+                    {u.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 overflow-hidden">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-bold truncate">{u.name}</h3>
+                    {u.role === 'admin' && (
+                      <span className="px-2 py-0.5 text-[10px] uppercase font-bold bg-primary/20 text-primary rounded-full">
+                        Admin
+                      </span>
                     )}
                   </div>
-                </button>
-              ))}
-            </div>
-          )}
+                  <p className="text-sm text-muted-foreground truncate">{u.tagline}</p>
+                </div>
+
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  {loadingId === u.id ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <ArrowRight className="w-5 h-5" />
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

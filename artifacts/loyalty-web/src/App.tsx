@@ -22,11 +22,12 @@ const queryClient = new QueryClient();
 
 function Router() {
   const userId = typeof window !== "undefined" ? localStorage.getItem("pointhive.userId") : null;
+  const path = typeof window !== "undefined" ? window.location.pathname : "/";
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const loginUrl = `${basePath}/login`;
 
-  if (!userId && window.location.pathname !== "/login") {
-    // Default to admin user for demo purposes if nothing set
-    localStorage.setItem("pointhive.userId", "1");
-    window.location.reload();
+  if (!userId && path !== loginUrl && !path.endsWith("/login")) {
+    window.location.href = loginUrl;
     return null;
   }
 
