@@ -1,0 +1,80 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "_Xbb9f6kn4v7dLJJRtGat"
+uri = "file://artifacts/loyalty-web/src/assets/images/login-bg.png"
+type = "image"
+title = "Hive themed abstract geometric background"
+
+[[generated]]
+id = "w5fNTiJhQx82CAe54aBPJ"
+uri = "file://artifacts/loyalty-web/src/assets/images/product-jacket.png"
+type = "image"
+title = "Trendy thrifted jacket"
+
+[[generated]]
+id = "GsnhT_M3WJCqks4pg--KJ"
+uri = "file://artifacts/loyalty-web/src/assets/images/coupon-coffee.png"
+type = "image"
+title = "Modern coffee shop coupon"
+
+[[generated]]
+id = "sr60q8VUICPfbQd1ZMZvj"
+uri = "file://attached_assets/seed/mug.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "MzASMg2smcwT5EQkdxDbz"
+uri = "file://attached_assets/seed/headphones.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "bjCOmIFXkNeoqXfwYsFbM"
+uri = "file://attached_assets/seed/jacket.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "BKfIzDW1oCzKBt1AfW2q-"
+uri = "file://attached_assets/seed/plant.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "4wdfodvf975o8UegjTr_6"
+uri = "file://attached_assets/seed/coupon-coffee.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "T9Y_sKqXh_V3bMKObtFqT"
+uri = "file://attached_assets/seed/coupon-streetwear.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ZgVPvA9ePy0qamvjaMzkv"
+uri = "file://attached_assets/seed/avatar1.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "uTtxOUJDRyWP5c5rXxMgw"
+uri = "file://attached_assets/seed/avatar2.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "f08_K3S32E6IFo4yro1DT"
+uri = "file://attached_assets/seed/avatar3.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "N_wxs95TTLjreaAf5wr0_"
+uri = "file://attached_assets/seed/avatar4.png"
+type = "image"
+title = "generated_image"

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "PointHive — Loyalty & Marketplace"
+version = "1.0.0"
+id = "artifacts/loyalty-web"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25497
+
+[services.development]
+run = "pnpm --filter @workspace/loyalty-web run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/loyalty-web", "run", "build" ]
+publicDir = "artifacts/loyalty-web/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25497"
+BASE_PATH = "/"

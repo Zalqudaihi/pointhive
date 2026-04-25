@@ -358,6 +358,13 @@ export async function customFetch<T = unknown>(
     }
   }
 
+  if (typeof window !== "undefined") {
+    const userId = window.localStorage.getItem("pointhive.userId");
+    if (userId) {
+      headers.set("x-user-id", userId);
+    }
+  }
+
   const requestInfo = { method, url: resolveUrl(input) };
 
   const response = await fetch(input, { ...init, method, headers });

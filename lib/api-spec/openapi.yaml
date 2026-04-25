@@ -3,34 +3,667 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Loyalty points & marketplace platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: users
+    description: User management
+  - name: products
+    description: Product and coupon listings
+  - name: transactions
+    description: Purchases, transfers, and exchanges
+  - name: notifications
+    description: User notifications
+  - name: dashboard
+    description: Personalized dashboard data
+  - name: admin
+    description: Platform-wide admin views
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
           content:
             application/json:
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+
+  # --- Users ---
+  /users/me:
+    get:
+      operationId: getCurrentUser
+      tags: [users]
+      summary: Get the currently signed-in user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+    patch:
+      operationId: updateCurrentUser
+      tags: [users]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateUserBody" }
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
               schema:
-                $ref: "#/components/schemas/HealthStatus"
+                type: array
+                items: { $ref: "#/components/schemas/User" }
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get a user by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  # --- Products ---
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List marketplace listings
+      parameters:
+        - in: query
+          name: type
+          schema: { type: string, enum: [item, coupon] }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: sellerId
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema: { type: string, enum: [active, sold, draft] }
+      responses:
+        "200":
+          description: Listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Product" }
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a new listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NewProduct" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Product" }
+  /products/categories:
+    get:
+      operationId: listProductCategories
+      tags: [products]
+      summary: Distinct product categories with counts
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CategoryCount" }
+  /products/{id}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get a single listing
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Listing
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Product" }
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+    patch:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a listing
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProductUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Product" }
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Remove a listing
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # --- Transactions ---
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List recent transactions for the current user
+      parameters:
+        - in: query
+          name: type
+          schema: { type: string, enum: [purchase, transfer, exchange] }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Transaction" }
+  /transactions/{id}:
+    get:
+      operationId: getTransaction
+      tags: [transactions]
+      summary: Get a single transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Transaction
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transaction" }
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /transactions/purchase:
+    post:
+      operationId: createPurchase
+      tags: [transactions]
+      summary: Buy an item or coupon
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PurchaseBody" }
+      responses:
+        "201":
+          description: Purchase confirmed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transaction" }
+        "400":
+          description: Invalid purchase
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /transactions/transfer:
+    post:
+      operationId: createTransfer
+      tags: [transactions]
+      summary: Transfer loyalty points to another user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TransferBody" }
+      responses:
+        "201":
+          description: Transfer complete
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transaction" }
+        "400":
+          description: Invalid transfer
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  # --- Notifications ---
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications for the current user
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Notification" }
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Notification" }
+  /notifications/mark-all-read:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: Done
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MarkAllReadResponse" }
+
+  # --- Dashboard (wow endpoints) ---
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Dashboard summary for current user
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardSummary" }
+  /dashboard/activity:
+    get:
+      operationId: getDashboardActivity
+      tags: [dashboard]
+      summary: Recent activity feed for current user
+      responses:
+        "200":
+          description: Activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ActivityItem" }
+  /dashboard/trending:
+    get:
+      operationId: getTrendingProducts
+      tags: [dashboard]
+      summary: Trending products to discover
+      responses:
+        "200":
+          description: Trending listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Product" }
+
+  # --- Admin (wow endpoints) ---
+  /admin/overview:
+    get:
+      operationId: getAdminOverview
+      tags: [admin]
+      summary: Platform-wide stats
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminOverview" }
+  /admin/recent-activity:
+    get:
+      operationId: getAdminRecentActivity
+      tags: [admin]
+      summary: Recent platform activity
+      responses:
+        "200":
+          description: Activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ActivityItem" }
+  /admin/top-sellers:
+    get:
+      operationId: getTopSellers
+      tags: [admin]
+      summary: Top sellers by transaction volume
+      responses:
+        "200":
+          description: Top sellers
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TopSeller" }
+
 components:
   schemas:
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
+        status: { type: string }
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error: { type: string }
+      required: [error]
+
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        name: { type: string }
+        avatarUrl:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        role: { type: string, enum: [user, admin] }
+        pointsBalance: { type: integer }
+        createdAt: { type: string, format: date-time }
+      required: [id, email, name, role, pointsBalance, createdAt]
+
+    UpdateUserBody:
+      type: object
+      properties:
+        name: { type: string }
+        bio:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+
+    Product:
+      type: object
+      properties:
+        id: { type: integer }
+        sellerId: { type: integer }
+        sellerName: { type: string }
+        sellerAvatarUrl:
+          type: ["string", "null"]
+        title: { type: string }
+        description: { type: string }
+        imageUrl:
+          type: ["string", "null"]
+        category: { type: string }
+        type: { type: string, enum: [item, coupon] }
+        pointPrice: { type: integer }
+        cashPriceCents:
+          type: ["integer", "null"]
+        stock: { type: integer }
+        status: { type: string, enum: [active, sold, draft] }
+        couponCode:
+          type: ["string", "null"]
+        couponDiscountPct:
+          type: ["integer", "null"]
+        couponExpiresAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt: { type: string, format: date-time }
+      required:
+        - id
+        - sellerId
+        - sellerName
+        - title
+        - description
+        - category
+        - type
+        - pointPrice
+        - stock
+        - status
+        - createdAt
+
+    NewProduct:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        imageUrl:
+          type: ["string", "null"]
+        category: { type: string }
+        type: { type: string, enum: [item, coupon] }
+        pointPrice: { type: integer }
+        cashPriceCents:
+          type: ["integer", "null"]
+        stock: { type: integer }
+        couponCode:
+          type: ["string", "null"]
+        couponDiscountPct:
+          type: ["integer", "null"]
+        couponExpiresAt:
+          type: ["string", "null"]
+          format: date-time
+      required: [title, description, category, type, pointPrice, stock]
+
+    ProductUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        imageUrl:
+          type: ["string", "null"]
+        category: { type: string }
+        pointPrice: { type: integer }
+        cashPriceCents:
+          type: ["integer", "null"]
+        stock: { type: integer }
+        status: { type: string, enum: [active, sold, draft] }
+
+    CategoryCount:
+      type: object
+      properties:
+        category: { type: string }
+        count: { type: integer }
+      required: [category, count]
+
+    Transaction:
+      type: object
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [purchase, transfer, exchange] }
+        buyerId:
+          type: ["integer", "null"]
+        buyerName:
+          type: ["string", "null"]
+        sellerId:
+          type: ["integer", "null"]
+        sellerName:
+          type: ["string", "null"]
+        productId:
+          type: ["integer", "null"]
+        productTitle:
+          type: ["string", "null"]
+        productImageUrl:
+          type: ["string", "null"]
+        pointsAmount: { type: integer }
+        cashCents:
+          type: ["integer", "null"]
+        note:
+          type: ["string", "null"]
+        status: { type: string, enum: [pending, completed, failed] }
+        createdAt: { type: string, format: date-time }
+      required: [id, type, pointsAmount, status, createdAt]
+
+    PurchaseBody:
+      type: object
+      properties:
+        productId: { type: integer }
+      required: [productId]
+
+    TransferBody:
+      type: object
+      properties:
+        recipientId: { type: integer }
+        pointsAmount: { type: integer }
+        note:
+          type: ["string", "null"]
+      required: [recipientId, pointsAmount]
+
+    Notification:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        type: { type: string, enum: [purchase, transfer, system, marketplace] }
+        title: { type: string }
+        body: { type: string }
+        read: { type: boolean }
+        createdAt: { type: string, format: date-time }
+      required: [id, userId, type, title, body, read, createdAt]
+
+    MarkAllReadResponse:
+      type: object
+      properties:
+        updatedCount: { type: integer }
+      required: [updatedCount]
+
+    DashboardSummary:
+      type: object
+      properties:
+        pointsBalance: { type: integer }
+        pointsEarned30d: { type: integer }
+        pointsSpent30d: { type: integer }
+        activeListings: { type: integer }
+        completedPurchases: { type: integer }
+        couponsOwned: { type: integer }
+        unreadNotifications: { type: integer }
+      required:
+        - pointsBalance
+        - pointsEarned30d
+        - pointsSpent30d
+        - activeListings
+        - completedPurchases
+        - couponsOwned
+        - unreadNotifications
+
+    ActivityItem:
+      type: object
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [purchase, transfer, exchange, listing] }
+        title: { type: string }
+        subtitle: { type: string }
+        pointsAmount:
+          type: ["integer", "null"]
+        actorName:
+          type: ["string", "null"]
+        actorAvatarUrl:
+          type: ["string", "null"]
+        createdAt: { type: string, format: date-time }
+      required: [id, type, title, subtitle, createdAt]
+
+    AdminOverview:
+      type: object
+      properties:
+        totalUsers: { type: integer }
+        totalListings: { type: integer }
+        activeListings: { type: integer }
+        transactions7d: { type: integer }
+        transactions30d: { type: integer }
+        pointsCirculated: { type: integer }
+        cashVolumeCents: { type: integer }
+        newUsers7d: { type: integer }
+      required:
+        - totalUsers
+        - totalListings
+        - activeListings
+        - transactions7d
+        - transactions30d
+        - pointsCirculated
+        - cashVolumeCents
+        - newUsers7d
+
+    TopSeller:
+      type: object
+      properties:
+        userId: { type: integer }
+        name: { type: string }
+        avatarUrl:
+          type: ["string", "null"]
+        totalSales: { type: integer }
+        pointsEarned: { type: integer }
+      required: [userId, name, totalSales, pointsEarned]
