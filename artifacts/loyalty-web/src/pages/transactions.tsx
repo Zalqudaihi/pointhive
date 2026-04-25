@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useListTransactions } from "@workspace/api-client-react";
+import { useListTransactions, useGetCurrentUser } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Transactions() {
   const [activeFilter, setActiveFilter] = useState<"purchase" | "transfer" | "exchange" | null>(null);
 
+  const { data: currentUser } = useGetCurrentUser();
   const { data: transactions, isLoading } = useListTransactions({
     type: activeFilter || undefined,
   });
@@ -108,23 +109,47 @@ export default function Transactions() {
                   </div>
                   
                   <p className="text-sm text-muted-foreground truncate">
-                    {tx.type === 'purchase' ? (
-                      <>You bought <span className="font-medium text-foreground">{tx.productTitle}</span> from {tx.sellerName}</>
-                    ) : tx.type === 'transfer' ? (
-                      <>Sent to <span className="font-medium text-foreground">{tx.buyerName || tx.sellerName}</span></> // This needs proper logic based on user role but for UI mockup this is ok
-                    ) : (
-                      <>System exchange</>
-                    )}
+                    {(() => {
+                      const userId = currentUser?.id;
+                      if (tx.type === 'purchase') {
+                        const isBuyer = userId != null && tx.buyerId === userId;
+                        return isBuyer ? (
+                          <>You bought <span className="font-medium text-foreground">{tx.productTitle}</span> from {tx.sellerName}</>
+                        ) : (
+                          <>You sold <span className="font-medium text-foreground">{tx.productTitle}</span> to {tx.buyerName}</>
+                        );
+                      }
+                      if (tx.type === 'transfer') {
+                        const isSender = userId != null && tx.sellerId === userId;
+                        return isSender ? (
+                          <>Sent to <span className="font-medium text-foreground">{tx.buyerName}</span></>
+                        ) : (
+                          <>Received from <span className="font-medium text-foreground">{tx.sellerName}</span></>
+                        );
+                      }
+                      return <>System exchange</>;
+                    })()}
                   </p>
                 </div>
                 
                 <div className="text-right shrink-0 flex flex-col items-end">
-                  <div className={`font-black flex items-center gap-1 text-lg ${
-                    tx.type === 'purchase' ? 'text-destructive' : 'text-primary'
-                  }`}>
-                    {tx.type === 'purchase' ? '-' : '+'}{tx.pointsAmount.toLocaleString()}
-                    <Hexagon className="w-4 h-4 fill-current" />
-                  </div>
+                  {(() => {
+                    const userId = currentUser?.id;
+                    let isOutgoing = false;
+                    if (tx.type === 'purchase') {
+                      isOutgoing = userId != null && tx.buyerId === userId;
+                    } else if (tx.type === 'transfer') {
+                      isOutgoing = userId != null && tx.sellerId === userId;
+                    }
+                    return (
+                      <div className={`font-black flex items-center gap-1 text-lg ${
+                        isOutgoing ? 'text-destructive' : 'text-primary'
+                      }`}>
+                        {isOutgoing ? '-' : '+'}{tx.pointsAmount.toLocaleString()}
+                        <Hexagon className="w-4 h-4 fill-current" />
+                      </div>
+                    );
+                  })()}
                   <span className="text-xs text-muted-foreground font-medium">
                     {formatDistanceToNow(new Date(tx.createdAt), { addSuffix: true })}
                   </span>
