@@ -51,11 +51,12 @@ export default function ListingDetail() {
       queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
       
       setLocation("/transactions");
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "You might not have enough points.";
       toast({
         variant: "destructive",
         title: "Purchase failed",
-        description: err?.message || "You might not have enough points.",
+        description: message,
       });
     } finally {
       setIsBuying(false);

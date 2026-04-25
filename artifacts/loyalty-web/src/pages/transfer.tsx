@@ -73,11 +73,12 @@ export default function Transfer() {
       queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
 
       setLocation("/transactions");
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Not enough points or invalid request.";
       toast({
         variant: "destructive",
         title: "Transfer failed",
-        description: error?.message || "Not enough points or invalid request.",
+        description: message,
       });
     }
   };

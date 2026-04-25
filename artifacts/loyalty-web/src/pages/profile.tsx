@@ -78,11 +78,12 @@ export default function Profile() {
       });
 
       queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not save your profile.";
       toast({
         variant: "destructive",
         title: "Update failed",
-        description: error?.message || "Could not save your profile.",
+        description: message,
       });
     } finally {
       setIsSaving(false);

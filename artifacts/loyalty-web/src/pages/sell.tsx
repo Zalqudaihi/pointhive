@@ -5,7 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { 
-  useCreateProduct, 
+  useCreateProduct,
+  type NewProduct,
   getListProductsQueryKey,
   getGetDashboardSummaryQueryKey
 } from "@workspace/api-client-react";
@@ -83,7 +84,7 @@ export default function Sell() {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const payload: any = {
+      const payload: NewProduct = {
         title: values.title,
         description: values.description,
         category: values.category,
@@ -112,11 +113,12 @@ export default function Sell() {
       queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
 
       setLocation("/inventory");
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "An unexpected error occurred.";
       toast({
         variant: "destructive",
         title: "Failed to create listing",
-        description: error?.message || "An unexpected error occurred.",
+        description: message,
       });
     } finally {
       setIsSubmitting(false);

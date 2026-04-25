@@ -42,22 +42,42 @@ router.patch("/users/me", async (req, res) => {
 });
 
 router.get("/users", async (req, res) => {
+  const callerId = await resolveCurrentUserId(req);
+  const callerRows = await db.select().from(usersTable).where(eq(usersTable.id, callerId)).limit(1);
+  const isAdmin = callerRows[0]?.role === "admin";
+
   const parsed = ListUsersQueryParams.safeParse(req.query);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const search = parsed.data.search?.trim();
-  const rows = search
-    ? await db
-        .select()
-        .from(usersTable)
-        .where(or(ilike(usersTable.name, `%${search}%`), ilike(usersTable.email, `%${search}%`)))
-        .orderBy(asc(usersTable.id))
+
+  // Non-admins can only search by name (email enumeration is prohibited)
+  const whereClause = search
+    ? isAdmin
+      ? or(ilike(usersTable.name, `%${search}%`), ilike(usersTable.email, `%${search}%`))
+      : ilike(usersTable.name, `%${search}%`)
+    : undefined;
+
+  const rows = whereClause
+    ? await db.select().from(usersTable).where(whereClause).orderBy(asc(usersTable.id))
     : await db.select().from(usersTable).orderBy(asc(usersTable.id));
+
   return res.json(
-    ListUsersResponse.parse(rows.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() }))),
+    ListUsersResponse.parse(
+      rows.map((u) => ({
+        ...u,
+        // Hide PII (email) from non-admin callers, except for the caller's own record
+        email: isAdmin || u.id === callerId ? u.email : "",
+        createdAt: u.createdAt.toISOString(),
+      })),
+    ),
   );
 });
 
 router.get("/users/:id", async (req, res) => {
+  const callerId = await resolveCurrentUserId(req);
+  const callerRows = await db.select().from(usersTable).where(eq(usersTable.id, callerId)).limit(1);
+  const isAdmin = callerRows[0]?.role === "admin";
+
   const parsed = GetUserParams.safeParse({ id: Number(req.params.id) });
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const rows = await db
@@ -67,7 +87,13 @@ router.get("/users/:id", async (req, res) => {
     .limit(1);
   const u = rows[0];
   if (!u) return res.status(404).json({ error: "User not found" });
-  return res.json(GetUserResponse.parse({ ...u, createdAt: u.createdAt.toISOString() }));
+  return res.json(
+    GetUserResponse.parse({
+      ...u,
+      email: isAdmin || u.id === callerId ? u.email : "",
+      createdAt: u.createdAt.toISOString(),
+    }),
+  );
 });
 
 export default router;
