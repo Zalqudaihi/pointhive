@@ -18,7 +18,7 @@ router.get("/notifications", async (req, res) => {
     .from(notificationsTable)
     .where(eq(notificationsTable.userId, userId))
     .orderBy(desc(notificationsTable.createdAt));
-  res.json(
+  return res.json(
     ListNotificationsResponse.parse(
       rows.map((n) => ({ ...n, createdAt: n.createdAt.toISOString() })),
     ),
@@ -37,7 +37,7 @@ router.patch("/notifications/:id/read", async (req, res) => {
     )
     .returning();
   if (!updated) return res.status(404).json({ error: "Notification not found" });
-  res.json(
+  return res.json(
     MarkNotificationReadResponse.parse({ ...updated, createdAt: updated.createdAt.toISOString() }),
   );
 });
@@ -49,7 +49,7 @@ router.post("/notifications/mark-all-read", async (req, res) => {
     .set({ read: true })
     .where(and(eq(notificationsTable.userId, userId), eq(notificationsTable.read, false)))
     .returning({ id: notificationsTable.id });
-  res.json(MarkAllNotificationsReadResponse.parse({ updatedCount: updated.length }));
+  return res.json(MarkAllNotificationsReadResponse.parse({ updatedCount: updated.length }));
 });
 
 export default router;

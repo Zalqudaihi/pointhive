@@ -66,7 +66,7 @@ router.get("/products", async (req, res) => {
     .leftJoin(usersTable, eq(productsTable.sellerId, usersTable.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(desc(productsTable.createdAt));
-  res.json(ListProductsResponse.parse(rows.map(shape)));
+  return res.json(ListProductsResponse.parse(rows.map(shape)));
 });
 
 router.post("/products", async (req, res) => {
@@ -98,7 +98,7 @@ router.post("/products", async (req, res) => {
     .from(usersTable)
     .where(eq(usersTable.id, userId))
     .limit(1);
-  res.status(201).json(shape({ product: created, seller: sellerRows[0] ?? null }));
+  return res.status(201).json(shape({ product: created, seller: sellerRows[0] ?? null }));
 });
 
 router.get("/products/categories", async (_req, res) => {
@@ -106,7 +106,7 @@ router.get("/products/categories", async (_req, res) => {
     .select({ category: productsTable.category, count: sql<number>`count(*)::int` })
     .from(productsTable)
     .groupBy(productsTable.category);
-  res.json(ListProductCategoriesResponse.parse(rows.map((r) => ({ category: r.category, count: Number(r.count) }))));
+  return res.json(ListProductCategoriesResponse.parse(rows.map((r) => ({ category: r.category, count: Number(r.count) }))));
 });
 
 router.get("/products/:id", async (req, res) => {
@@ -123,7 +123,7 @@ router.get("/products/:id", async (req, res) => {
     .limit(1);
   const r = rows[0];
   if (!r) return res.status(404).json({ error: "Product not found" });
-  res.json(GetProductResponse.parse(shape(r)));
+  return res.json(GetProductResponse.parse(shape(r)));
 });
 
 router.patch("/products/:id", async (req, res) => {
@@ -162,7 +162,7 @@ router.patch("/products/:id", async (req, res) => {
     .from(usersTable)
     .where(eq(usersTable.id, updated.sellerId))
     .limit(1);
-  res.json(UpdateProductResponse.parse(shape({ product: updated, seller: sellerRows[0] ?? null })));
+  return res.json(UpdateProductResponse.parse(shape({ product: updated, seller: sellerRows[0] ?? null })));
 });
 
 router.delete("/products/:id", async (req, res) => {
@@ -179,7 +179,7 @@ router.delete("/products/:id", async (req, res) => {
     return res.status(403).json({ error: "Cannot delete another user's listing" });
   }
   await db.delete(productsTable).where(eq(productsTable.id, parsed.data.id));
-  res.status(204).send();
+  return res.status(204).send();
 });
 
 export default router;

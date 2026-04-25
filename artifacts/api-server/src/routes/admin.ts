@@ -16,11 +16,18 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
     const userId = await resolveCurrentUserId(req);
     const rows = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     const u = rows[0];
-    if (!u) return res.status(401).json({ error: "Unauthorized" });
-    if (u.role !== "admin") return res.status(403).json({ error: "Admin access required" });
+    if (!u) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    if (u.role !== "admin") {
+      res.status(403).json({ error: "Admin access required" });
+      return;
+    }
     next();
   } catch (e) {
-    return res.status(401).json({ error: "Unauthorized" });
+    res.status(401).json({ error: "Unauthorized" });
+    return;
   }
 }
 
@@ -60,7 +67,7 @@ router.get("/admin/overview", async (_req, res) => {
     .from(usersTable)
     .where(gte(usersTable.createdAt, cutoff7));
 
-  res.json(
+  return res.json(
     GetAdminOverviewResponse.parse({
       totalUsers: Number(users?.count ?? 0),
       totalListings: Number(listings?.count ?? 0),
@@ -118,7 +125,7 @@ router.get("/admin/recent-activity", async (_req, res) => {
       createdAt: t.createdAt.toISOString(),
     };
   });
-  res.json(GetAdminRecentActivityResponse.parse(items));
+  return res.json(GetAdminRecentActivityResponse.parse(items));
 });
 
 router.get("/admin/top-sellers", async (_req, res) => {
@@ -143,7 +150,7 @@ router.get("/admin/top-sellers", async (_req, res) => {
     .orderBy(desc(sql`COUNT(${transactionsTable.id})`), desc(sql`COALESCE(SUM(${transactionsTable.pointsAmount}), 0)`))
     .limit(10);
 
-  res.json(
+  return res.json(
     GetTopSellersResponse.parse(
       rows.map((r) => ({
         userId: r.userId,

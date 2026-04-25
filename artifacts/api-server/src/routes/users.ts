@@ -19,7 +19,7 @@ router.get("/users/me", async (req, res) => {
   const rows = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
   const u = rows[0];
   if (!u) return res.status(404).json({ error: "Current user not found" });
-  res.json(GetCurrentUserResponse.parse({ ...u, createdAt: u.createdAt.toISOString() }));
+  return res.json(GetCurrentUserResponse.parse({ ...u, createdAt: u.createdAt.toISOString() }));
 });
 
 router.patch("/users/me", async (req, res) => {
@@ -36,7 +36,7 @@ router.patch("/users/me", async (req, res) => {
     .where(eq(usersTable.id, userId))
     .returning();
   if (!updated) return res.status(404).json({ error: "User not found" });
-  res.json(
+  return res.json(
     UpdateCurrentUserResponse.parse({ ...updated, createdAt: updated.createdAt.toISOString() }),
   );
 });
@@ -52,7 +52,7 @@ router.get("/users", async (req, res) => {
         .where(or(ilike(usersTable.name, `%${search}%`), ilike(usersTable.email, `%${search}%`)))
         .orderBy(asc(usersTable.id))
     : await db.select().from(usersTable).orderBy(asc(usersTable.id));
-  res.json(
+  return res.json(
     ListUsersResponse.parse(rows.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() }))),
   );
 });
@@ -67,7 +67,7 @@ router.get("/users/:id", async (req, res) => {
     .limit(1);
   const u = rows[0];
   if (!u) return res.status(404).json({ error: "User not found" });
-  res.json(GetUserResponse.parse({ ...u, createdAt: u.createdAt.toISOString() }));
+  return res.json(GetUserResponse.parse({ ...u, createdAt: u.createdAt.toISOString() }));
 });
 
 export default router;

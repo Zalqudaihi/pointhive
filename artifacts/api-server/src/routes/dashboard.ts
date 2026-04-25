@@ -85,7 +85,7 @@ router.get("/dashboard/summary", async (req, res) => {
     .from(notificationsTable)
     .where(and(eq(notificationsTable.userId, userId), eq(notificationsTable.read, false)));
 
-  res.json(
+  return res.json(
     GetDashboardSummaryResponse.parse({
       pointsBalance: user.pointsBalance,
       pointsEarned30d: Number(earnedRow?.total ?? 0),
@@ -168,7 +168,7 @@ router.get("/dashboard/activity", async (req, res) => {
     };
   });
 
-  res.json(GetDashboardActivityResponse.parse(items));
+  return res.json(GetDashboardActivityResponse.parse(items));
 });
 
 router.get("/dashboard/trending", async (req, res) => {
@@ -209,7 +209,7 @@ router.get("/dashboard/trending", async (req, res) => {
       .limit(8);
   }
 
-  res.json(
+  return res.json(
     GetTrendingProductsResponse.parse(
       rows.map((r) => ({
         id: r.product.id,

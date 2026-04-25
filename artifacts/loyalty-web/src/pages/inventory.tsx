@@ -7,7 +7,8 @@ import {
   useUpdateProduct,
   useDeleteProduct,
   getListProductsQueryKey,
-  getGetDashboardSummaryQueryKey
+  getGetDashboardSummaryQueryKey,
+  ProductUpdateStatus,
 } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -66,24 +67,28 @@ export default function Inventory() {
 
   const handleToggleStatus = async (id: number, currentStatus: string) => {
     try {
-      const newStatus = currentStatus === 'active' ? 'draft' : 'active';
-      await updateProduct.mutateAsync({ 
-        id, 
-        data: { status: newStatus as any } 
+      const newStatus: ProductUpdateStatus =
+        currentStatus === 'active'
+          ? ProductUpdateStatus.draft
+          : ProductUpdateStatus.active;
+      await updateProduct.mutateAsync({
+        id,
+        data: { status: newStatus },
       });
-      
+
       toast({
         title: "Listing updated",
         description: `Your listing is now ${newStatus}.`,
       });
-      
+
       queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not update the listing.";
       toast({
         variant: "destructive",
         title: "Failed to update",
-        description: err?.message || "Could not update the listing.",
+        description: message,
       });
     }
   };
@@ -101,11 +106,12 @@ export default function Inventory() {
       
       queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not delete the listing.";
       toast({
         variant: "destructive",
         title: "Failed to delete",
-        description: err?.message || "Could not delete the listing.",
+        description: message,
       });
     } finally {
       setDeleteId(null);

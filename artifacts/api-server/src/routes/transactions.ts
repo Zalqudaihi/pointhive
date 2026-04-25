@@ -67,7 +67,7 @@ router.get("/transactions", async (req, res) => {
     .$dynamic();
   if (limit) q = q.limit(limit);
   const rows = await q;
-  res.json(ListTransactionsResponse.parse(rows.map(shape)));
+  return res.json(ListTransactionsResponse.parse(rows.map(shape)));
 });
 
 router.get("/transactions/:id", async (req, res) => {
@@ -92,7 +92,7 @@ router.get("/transactions/:id", async (req, res) => {
   if (r.txn.buyerId !== userId && r.txn.sellerId !== userId) {
     return res.status(404).json({ error: "Transaction not found" });
   }
-  res.json(GetTransactionResponse.parse(shape(r)));
+  return res.json(GetTransactionResponse.parse(shape(r)));
 });
 
 router.post("/transactions/purchase", async (req, res) => {
@@ -184,7 +184,7 @@ router.post("/transactions/purchase", async (req, res) => {
       .where(eq(usersTable.id, userId))
       .limit(1);
 
-    res.status(201).json(
+    return res.status(201).json(
       shape({
         txn: result.created,
         buyer: buyerRow ?? null,
@@ -197,7 +197,7 @@ router.post("/transactions/purchase", async (req, res) => {
       }),
     );
   } catch (err) {
-    res.status(400).json({ error: err instanceof Error ? err.message : "Purchase failed" });
+    return res.status(400).json({ error: err instanceof Error ? err.message : "Purchase failed" });
   }
 });
 
@@ -268,7 +268,7 @@ router.post("/transactions/transfer", async (req, res) => {
       return { created, sender, recipient };
     });
 
-    res.status(201).json(
+    return res.status(201).json(
       shape({
         txn: result.created,
         buyer: { id: result.recipient.id, name: result.recipient.name },
@@ -277,7 +277,7 @@ router.post("/transactions/transfer", async (req, res) => {
       }),
     );
   } catch (err) {
-    res.status(400).json({ error: err instanceof Error ? err.message : "Transfer failed" });
+    return res.status(400).json({ error: err instanceof Error ? err.message : "Transfer failed" });
   }
 });
 
