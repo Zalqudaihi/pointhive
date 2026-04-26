@@ -21,7 +21,7 @@ import { useColors } from "@/hooks/useColors";
 export default function SignUpScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { signUp, setActive, isLoaded } = useSignUp();
+  const { signUp, fetchStatus } = useSignUp();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -30,59 +30,70 @@ export default function SignUpScreen() {
   const [verifyCode, setVerifyCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showVerify, setShowVerify] = useState(false);
-  const [loading, setLoading] = useState(false);
+
+  const isLoading = fetchStatus === "fetching";
 
   const handleSignUp = async () => {
-    if (!isLoaded || !email || !password || !firstName) return;
+    if (!email || !password || !firstName) return;
     setError(null);
-    setLoading(true);
     try {
-      await signUp.create({
+      const { error: signUpError } = await signUp.password({
         emailAddress: email,
         password,
         firstName,
         lastName: lastName.trim() || undefined,
       });
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      if (signUpError) {
+        setError(signUpError.message ?? "Sign-up failed. Please try again.");
+        return;
+      }
+      const { error: sendError } = await signUp.verifications.sendEmailCode();
+      if (sendError) {
+        setError(sendError.message ?? "Failed to send verification code.");
+        return;
+      }
       setShowVerify(true);
     } catch (e: unknown) {
       const msg =
         e instanceof Error ? e.message : "Sign-up failed. Please try again.";
       setError(msg);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleVerify = async () => {
-    if (!isLoaded) return;
     setError(null);
-    setLoading(true);
     try {
-      const result = await signUp.attemptEmailAddressVerification({
+      const { error: verifyError } = await signUp.verifications.verifyEmailCode({
         code: verifyCode,
       });
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        router.replace("/(tabs)");
-      } else {
-        setError("Verification incomplete. Please try again.");
+      if (verifyError) {
+        setError(verifyError.message ?? "Verification failed. Please try again.");
+        return;
+      }
+      if (signUp.status === "complete") {
+        await signUp.finalize({
+          navigate: ({ decorateUrl }) => {
+            const url = decorateUrl("/");
+            if (Platform.OS === "web" && url.startsWith("http")) {
+              window.location.href = url;
+            } else {
+              router.replace("/(tabs)");
+            }
+          },
+        });
       }
     } catch (e: unknown) {
       const msg =
         e instanceof Error ? e.message : "Verification failed. Please try again.";
       setError(msg);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleResend = async () => {
-    if (!isLoaded) return;
     try {
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      await signUp.verifications.sendEmailCode();
     } catch {
-      // ignore resend errors
+      // ignore resend errors silently
     }
   };
 
@@ -158,21 +169,21 @@ export default function SignUpScreen() {
 
               <Pressable
                 onPress={handleVerify}
-                disabled={loading || !verifyCode}
+                disabled={isLoading || !verifyCode}
                 style={({ pressed }) => [
                   styles.btn,
                   {
                     backgroundColor: colors.primary,
                     borderRadius: colors.radius,
                     opacity:
-                      loading || !verifyCode ? 0.6 : pressed ? 0.85 : 1,
+                      isLoading || !verifyCode ? 0.6 : pressed ? 0.85 : 1,
                   },
                 ]}
               >
                 <Text
                   style={[styles.btnText, { color: colors.primaryForeground }]}
                 >
-                  {loading ? "Verifying…" : "Verify email"}
+                  {isLoading ? "Verifying…" : "Verify email"}
                 </Text>
               </Pressable>
 
@@ -328,14 +339,14 @@ export default function SignUpScreen() {
 
               <Pressable
                 onPress={handleSignUp}
-                disabled={loading || !email || !password || !firstName}
+                disabled={isLoading || !email || !password || !firstName}
                 style={({ pressed }) => [
                   styles.btn,
                   {
                     backgroundColor: colors.primary,
                     borderRadius: colors.radius,
                     opacity:
-                      loading || !email || !password || !firstName
+                      isLoading || !email || !password || !firstName
                         ? 0.6
                         : pressed
                           ? 0.85
@@ -343,7 +354,7 @@ export default function SignUpScreen() {
                   },
                 ]}
               >
-                {loading ? (
+                {isLoading ? (
                   <View style={styles.btnInner}>
                     <FontAwesome6
                       name="circle-notch"
