@@ -78,3 +78,9 @@ id = "N_wxs95TTLjreaAf5wr0_"
 uri = "file://attached_assets/seed/avatar4.png"
 type = "image"
 title = "generated_image"
+
+[[generated]]
+id = "JruUi40WCOeUzHwnrhkjM"
+uri = "file://artifacts/loyalty-mobile/assets/images/icon.png"
+type = "image"
+title = "PointHive amber hexagon icon"

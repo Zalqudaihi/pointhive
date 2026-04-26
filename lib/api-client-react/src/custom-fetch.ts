@@ -17,6 +17,7 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _userIdGetter: AuthTokenGetter | null = null;
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -42,6 +43,22 @@ export function setBaseUrl(url: string | null): void {
  */
 export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
+}
+
+/**
+ * Register a getter that supplies an `x-user-id` header value.  Before every
+ * fetch the getter is invoked; when it returns a non-null string, an
+ * `x-user-id: <value>` header is attached to the request.
+ *
+ * Useful in environments without `window.localStorage` (e.g. Expo / React
+ * Native) where the demo identity must be supplied explicitly. On the web
+ * the existing `window.localStorage.getItem("pointhive.userId")` fallback
+ * remains in place when no explicit getter is registered.
+ *
+ * Pass `null` to clear the getter.
+ */
+export function setUserIdGetter(getter: AuthTokenGetter | null): void {
+  _userIdGetter = getter;
 }
 
 function isRequest(input: RequestInfo | URL): input is Request {
@@ -358,10 +375,23 @@ export async function customFetch<T = unknown>(
     }
   }
 
-  if (typeof window !== "undefined") {
-    const userId = window.localStorage.getItem("pointhive.userId");
-    if (userId) {
-      headers.set("x-user-id", userId);
+  // Inject x-user-id header for the demo identity model.
+  //   1. Explicit getter (Expo / RN) — wins when registered.
+  //   2. window.localStorage fallback (web) — used otherwise.
+  if (!headers.has("x-user-id")) {
+    if (_userIdGetter) {
+      const userId = await _userIdGetter();
+      if (userId) {
+        headers.set("x-user-id", userId);
+      }
+    } else if (
+      typeof window !== "undefined" &&
+      typeof window.localStorage !== "undefined"
+    ) {
+      const userId = window.localStorage.getItem("pointhive.userId");
+      if (userId) {
+        headers.set("x-user-id", userId);
+      }
     }
   }
 
