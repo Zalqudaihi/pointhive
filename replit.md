@@ -28,13 +28,21 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Artifacts
 
-- `artifacts/api-server` — Express + Drizzle API at `/api`. Header-based dev auth via `x-user-id` (set by clients).
+- `artifacts/api-server` — Express + Drizzle API at `/api`. Uses Clerk (`@clerk/express`) for production auth; `x-user-id` header still works in development for demo tooling. Users are auto-provisioned on first Clerk sign-in (looked up by `clerk_id`, then by email, then created). Clerk proxy middleware at `/api/__clerk`.
 - `artifacts/loyalty-web` — React + Vite web app for PointHive loyalty marketplace.
-- `artifacts/loyalty-mobile` — Expo React Native app (PointHive Mobile). Uses expo-router, shares the `@workspace/api-client-react` package (calls the same `/api` backend), 4-tab layout (Home/Shop/Inbox/Profile), product detail screen, profile editor, notifications inbox. Demo identity picker on `/login` (no Clerk per user). Dev-only `?demoUserId=N` URL param auto-signs-in for screenshot/test previews; gated behind `__DEV__`.
+- `artifacts/loyalty-mobile` — Expo React Native app (PointHive Mobile). Uses `@clerk/expo` for authentication with SecureStore session persistence. Real email/password sign-in at `app/login.tsx`, sign-up with email verification at `app/sign-up.tsx`. Uses expo-router, shares the `@workspace/api-client-react` package (calls the same `/api` backend), 4-tab layout (Home/Shop/Inbox/Profile), product detail screen, profile editor, notifications inbox.
 
-### Mobile API client wiring
+### Mobile auth & API client wiring
 
-`app/_layout.tsx` calls `setBaseUrl()` and `setUserIdGetter(() => getCurrentUserIdHeader())` from `@workspace/api-client-react` so every request carries `x-user-id` header. The `setUserIdGetter` helper was added to `lib/api-client-react/src/custom-fetch.ts`.
+`app/_layout.tsx` wraps the app in `ClerkProvider` with `tokenCache` from `@clerk/expo/token-cache` (uses SecureStore on native, localStorage on web). `AuthGate` uses Clerk's `useAuth` to detect sign-in state. `setAuthTokenGetter(() => getToken())` from `@workspace/api-client-react` attaches the Bearer token to every API request.
+
+### Mobile auth context
+
+`contexts/AuthContext.tsx` is a thin wrapper around `@clerk/expo`'s `useAuth` and `useClerk` hooks, exposing `{ isSignedIn, isLoaded, signOut }`. All components that used the old demo `userId` now rely on API responses for user data rather than a locally-stored integer ID.
+
+### Database: users table
+
+The `users` table has a `clerk_id` (nullable, unique text) column added alongside the existing integer `id`. The API server maps Clerk user IDs to database integer IDs on each authenticated request, auto-provisioning new rows using the Clerk user's email and name from the Clerk API.
 
 ### Mobile preview note
 

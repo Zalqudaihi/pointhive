@@ -1,5 +1,5 @@
 import { FontAwesome6 } from "@expo/vector-icons";
-import { useSignIn } from "@clerk/expo";
+import { useSignUp } from "@clerk/expo";
 import { useRouter, Link } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
@@ -18,45 +18,38 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { HexagonIcon } from "@/components/HexagonIcon";
 import { useColors } from "@/hooks/useColors";
 
-export default function LoginScreen() {
+export default function SignUpScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { signIn, fetchStatus } = useSignIn();
+  const { signUp, fetchStatus } = useSignUp();
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [verifyCode, setVerifyCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [showVerify, setShowVerify] = useState(false);
 
   const isLoading = fetchStatus === "fetching";
 
-  const handleSignIn = async () => {
-    if (!email || !password) return;
+  const handleSignUp = async () => {
+    if (!email || !password || !name) return;
     setError(null);
     try {
-      const { error: signInError } = await signIn.password({ emailAddress: email, password });
-      if (signInError) {
-        setError(signInError.message ?? "Sign-in failed. Please try again.");
+      const { error: signUpError } = await signUp.password({
+        emailAddress: email,
+        password,
+        firstName: name.split(" ")[0],
+        lastName: name.split(" ").slice(1).join(" ") || undefined,
+      });
+      if (signUpError) {
+        setError(signUpError.message ?? "Sign-up failed. Please try again.");
         return;
       }
-      if (signIn.status === "complete") {
-        await signIn.finalize({
-          navigate: ({ decorateUrl }) => {
-            const url = decorateUrl("/");
-            if (Platform.OS === "web" && url.startsWith("http")) {
-              window.location.href = url;
-            } else {
-              router.replace("/(tabs)");
-            }
-          },
-        });
-      } else if (signIn.status === "needs_client_trust") {
-        await signIn.mfa.sendEmailCode();
-        setShowVerify(true);
-      }
+      await signUp.verifications.sendEmailCode();
+      setShowVerify(true);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Sign-in failed. Please try again.";
+      const msg = e instanceof Error ? e.message : "Sign-up failed. Please try again.";
       setError(msg);
     }
   };
@@ -64,9 +57,9 @@ export default function LoginScreen() {
   const handleVerify = async () => {
     setError(null);
     try {
-      await signIn.mfa.verifyEmailCode({ code: verifyCode });
-      if (signIn.status === "complete") {
-        await signIn.finalize({
+      await signUp.verifications.verifyEmailCode({ code: verifyCode });
+      if (signUp.status === "complete") {
+        await signUp.finalize({
           navigate: ({ decorateUrl }) => {
             const url = decorateUrl("/");
             if (Platform.OS === "web" && url.startsWith("http")) {
@@ -110,9 +103,9 @@ export default function LoginScreen() {
 
           {showVerify ? (
             <View style={styles.form}>
-              <Text style={[styles.h1, { color: colors.foreground }]}>Check your email</Text>
+              <Text style={[styles.h1, { color: colors.foreground }]}>Verify your email</Text>
               <Text style={[styles.h2, { color: colors.mutedForeground }]}>
-                We sent a verification code to {email}
+                We sent a 6-digit code to {email}
               </Text>
 
               <View style={styles.field}>
@@ -155,20 +148,49 @@ export default function LoginScreen() {
                 ]}
               >
                 <Text style={[styles.btnText, { color: colors.primaryForeground }]}>
-                  {isLoading ? "Verifying…" : "Verify"}
+                  {isLoading ? "Verifying…" : "Verify email"}
+                </Text>
+              </Pressable>
+
+              <Pressable onPress={() => signUp.verifications.sendEmailCode()}>
+                <Text style={[styles.linkText, { color: colors.primary, textAlign: "center" }]}>
+                  Resend code
                 </Text>
               </Pressable>
 
               <Pressable onPress={() => { setShowVerify(false); setVerifyCode(""); setError(null); }}>
-                <Text style={[styles.linkText, { color: colors.primary }]}>← Back to sign in</Text>
+                <Text style={[styles.linkText, { color: colors.mutedForeground, textAlign: "center" }]}>
+                  ← Back
+                </Text>
               </Pressable>
             </View>
           ) : (
             <View style={styles.form}>
-              <Text style={[styles.h1, { color: colors.foreground }]}>Welcome back</Text>
+              <Text style={[styles.h1, { color: colors.foreground }]}>Create your account</Text>
               <Text style={[styles.h2, { color: colors.mutedForeground }]}>
-                Sign in to your account to continue
+                Join PointHive and start earning rewards
               </Text>
+
+              <View style={styles.field}>
+                <Text style={[styles.label, { color: colors.mutedForeground }]}>Full name</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                      borderRadius: colors.radius,
+                      color: colors.foreground,
+                    },
+                  ]}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Jane Smith"
+                  placeholderTextColor={colors.mutedForeground}
+                  autoCapitalize="words"
+                  autoComplete="name"
+                />
+              </View>
 
               <View style={styles.field}>
                 <Text style={[styles.label, { color: colors.mutedForeground }]}>Email</Text>
@@ -207,36 +229,30 @@ export default function LoginScreen() {
                   ]}
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="••••••••"
+                  placeholder="At least 8 characters"
                   placeholderTextColor={colors.mutedForeground}
                   secureTextEntry
-                  autoComplete="current-password"
-                  onSubmitEditing={handleSignIn}
+                  autoComplete="new-password"
+                  onSubmitEditing={handleSignUp}
                   returnKeyType="go"
                 />
               </View>
-
-              <Link href="/forgot-password" asChild>
-                <Pressable style={styles.forgotLink}>
-                  <Text style={[styles.forgotText, { color: colors.primary }]}>
-                    Forgot password?
-                  </Text>
-                </Pressable>
-              </Link>
 
               {error ? (
                 <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text>
               ) : null}
 
+              <View nativeID="clerk-captcha" />
+
               <Pressable
-                onPress={handleSignIn}
-                disabled={isLoading || !email || !password}
+                onPress={handleSignUp}
+                disabled={isLoading || !email || !password || !name}
                 style={({ pressed }) => [
                   styles.btn,
                   {
                     backgroundColor: colors.primary,
                     borderRadius: colors.radius,
-                    opacity: isLoading || !email || !password ? 0.6 : pressed ? 0.85 : 1,
+                    opacity: isLoading || !email || !password || !name ? 0.6 : pressed ? 0.85 : 1,
                   },
                 ]}
               >
@@ -244,23 +260,23 @@ export default function LoginScreen() {
                   <View style={styles.btnInner}>
                     <FontAwesome6 name="circle-notch" size={16} color={colors.primaryForeground} />
                     <Text style={[styles.btnText, { color: colors.primaryForeground }]}>
-                      Signing in…
+                      Creating account…
                     </Text>
                   </View>
                 ) : (
                   <Text style={[styles.btnText, { color: colors.primaryForeground }]}>
-                    Sign in
+                    Create account
                   </Text>
                 )}
               </Pressable>
 
               <View style={styles.footer}>
                 <Text style={[styles.footerText, { color: colors.mutedForeground }]}>
-                  Don't have an account?{" "}
+                  Already have an account?{" "}
                 </Text>
-                <Link href="/sign-up" asChild>
+                <Link href="/login" asChild>
                   <Pressable>
-                    <Text style={[styles.linkText, { color: colors.primary }]}>Sign up</Text>
+                    <Text style={[styles.linkText, { color: colors.primary }]}>Sign in</Text>
                   </Pressable>
                 </Link>
               </View>
@@ -361,13 +377,5 @@ const styles = StyleSheet.create({
   linkText: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
-  },
-  forgotLink: {
-    alignSelf: "flex-end",
-    marginTop: -4,
-  },
-  forgotText: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 13,
   },
 });
