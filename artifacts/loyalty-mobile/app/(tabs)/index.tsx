@@ -313,6 +313,11 @@ export default function DashboardScreen() {
           onPress={() => router.push("/(tabs)/notifications")}
         />
         <QuickAction
+          label="History"
+          icon="clock"
+          onPress={() => router.push("/transactions")}
+        />
+        <QuickAction
           label="Profile"
           icon="user"
           onPress={() => router.push("/(tabs)/profile")}
@@ -381,6 +386,17 @@ export default function DashboardScreen() {
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
           Recent activity
         </Text>
+        <Pressable onPress={() => router.push("/transactions")}>
+          <Text
+            style={{
+              color: colors.foreground,
+              fontFamily: "Inter_600SemiBold",
+              fontSize: 13,
+            }}
+          >
+            See all
+          </Text>
+        </Pressable>
       </View>
       <View
         style={[

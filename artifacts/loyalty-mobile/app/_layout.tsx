@@ -107,6 +107,13 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
+        name="transactions"
+        options={{
+          headerShown: false,
+          presentation: "card",
+        }}
+      />
+      <Stack.Screen
         name="my-listings"
         options={{
           headerShown: false,
