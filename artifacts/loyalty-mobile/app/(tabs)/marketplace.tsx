@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -28,6 +29,7 @@ const FILTERS: { key: Filter; label: string; icon: React.ComponentProps<typeof F
 export default function MarketplaceScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
@@ -52,12 +54,28 @@ export default function MarketplaceScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: 8 }]}>
-        <Text style={[styles.title, { color: colors.foreground }]}>
-          Marketplace
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          Spend points on real stuff & exclusive coupons.
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.title, { color: colors.foreground }]}>
+            Marketplace
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+            Spend points on real stuff & exclusive coupons.
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.push("/sell")}
+          style={({ pressed }) => [
+            styles.sellBtn,
+            {
+              backgroundColor: colors.primary,
+              borderRadius: 999,
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+        >
+          <Feather name="plus" size={16} color={colors.primaryForeground} />
+          <Text style={[styles.sellBtnText, { color: colors.primaryForeground }]}>Sell</Text>
+        </Pressable>
       </View>
 
       {/* Search */}
@@ -180,10 +198,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 12,
-    gap: 4,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
   },
   title: { fontFamily: "Inter_700Bold", fontSize: 26 },
   subtitle: { fontFamily: "Inter_400Regular", fontSize: 13 },
+  sellBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: 6,
+  },
+  sellBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
   searchWrap: {
     marginHorizontal: 20,
     flexDirection: "row",

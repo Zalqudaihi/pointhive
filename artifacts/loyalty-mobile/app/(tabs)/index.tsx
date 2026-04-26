@@ -287,11 +287,25 @@ export default function DashboardScreen() {
       </View>
 
       {/* Quick actions */}
-      <View style={styles.quickRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.quickRow}
+      >
         <QuickAction
           label="Shop"
           icon="shopping-bag"
           onPress={() => router.push("/(tabs)/marketplace")}
+        />
+        <QuickAction
+          label="Transfer"
+          icon="send"
+          onPress={() => router.push("/transfer")}
+        />
+        <QuickAction
+          label="Sell"
+          icon="tag"
+          onPress={() => router.push("/sell")}
         />
         <QuickAction
           label="Inbox"
@@ -303,7 +317,7 @@ export default function DashboardScreen() {
           icon="user"
           onPress={() => router.push("/(tabs)/profile")}
         />
-      </View>
+      </ScrollView>
 
       {/* Stats */}
       <View style={styles.statRow}>
@@ -451,9 +465,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     marginTop: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 4,
   },
   qa: {
-    flex: 1,
+    width: 72,
     paddingVertical: 14,
     alignItems: "center",
     gap: 6,
