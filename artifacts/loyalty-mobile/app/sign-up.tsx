@@ -21,58 +21,68 @@ import { useColors } from "@/hooks/useColors";
 export default function SignUpScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { signUp, fetchStatus } = useSignUp();
+  const { signUp, setActive, isLoaded } = useSignUp();
 
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showVerify, setShowVerify] = useState(false);
-
-  const isLoading = fetchStatus === "fetching";
+  const [loading, setLoading] = useState(false);
 
   const handleSignUp = async () => {
-    if (!email || !password || !name) return;
+    if (!isLoaded || !email || !password || !firstName) return;
     setError(null);
+    setLoading(true);
     try {
-      const { error: signUpError } = await signUp.password({
+      await signUp.create({
         emailAddress: email,
         password,
-        firstName: name.split(" ")[0],
-        lastName: name.split(" ").slice(1).join(" ") || undefined,
+        firstName,
+        lastName: lastName.trim() || undefined,
       });
-      if (signUpError) {
-        setError(signUpError.message ?? "Sign-up failed. Please try again.");
-        return;
-      }
-      await signUp.verifications.sendEmailCode();
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setShowVerify(true);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Sign-up failed. Please try again.";
+      const msg =
+        e instanceof Error ? e.message : "Sign-up failed. Please try again.";
       setError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleVerify = async () => {
+    if (!isLoaded) return;
     setError(null);
+    setLoading(true);
     try {
-      await signUp.verifications.verifyEmailCode({ code: verifyCode });
-      if (signUp.status === "complete") {
-        await signUp.finalize({
-          navigate: ({ decorateUrl }) => {
-            const url = decorateUrl("/");
-            if (Platform.OS === "web" && url.startsWith("http")) {
-              window.location.href = url;
-            } else {
-              router.replace("/(tabs)");
-            }
-          },
-        });
+      const result = await signUp.attemptEmailAddressVerification({
+        code: verifyCode,
+      });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        router.replace("/(tabs)");
+      } else {
+        setError("Verification incomplete. Please try again.");
       }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Verification failed. Please try again.";
+      const msg =
+        e instanceof Error ? e.message : "Verification failed. Please try again.";
       setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!isLoaded) return;
+    try {
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+    } catch {
+      // ignore resend errors
     }
   };
 
@@ -87,7 +97,10 @@ export default function SignUpScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={[styles.scroll, Platform.OS === "web" ? { paddingTop: 24 } : null]}
+          contentContainerStyle={[
+            styles.scroll,
+            Platform.OS === "web" ? { paddingTop: 24 } : null,
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -95,15 +108,21 @@ export default function SignUpScreen() {
             <View style={[styles.logo, { backgroundColor: colors.primary }]}>
               <HexagonIcon size={36} color={colors.primaryForeground} />
             </View>
-            <Text style={[styles.brandTitle, { color: colors.foreground }]}>PointHive</Text>
-            <Text style={[styles.brandTagline, { color: colors.mutedForeground }]}>
+            <Text style={[styles.brandTitle, { color: colors.foreground }]}>
+              PointHive
+            </Text>
+            <Text
+              style={[styles.brandTagline, { color: colors.mutedForeground }]}
+            >
               Where loyalty buys you something real.
             </Text>
           </View>
 
           {showVerify ? (
             <View style={styles.form}>
-              <Text style={[styles.h1, { color: colors.foreground }]}>Verify your email</Text>
+              <Text style={[styles.h1, { color: colors.foreground }]}>
+                Verify your email
+              </Text>
               <Text style={[styles.h2, { color: colors.mutedForeground }]}>
                 We sent a 6-digit code to {email}
               </Text>
@@ -132,68 +151,126 @@ export default function SignUpScreen() {
               </View>
 
               {error ? (
-                <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text>
+                <Text style={[styles.error, { color: colors.destructive }]}>
+                  {error}
+                </Text>
               ) : null}
 
               <Pressable
                 onPress={handleVerify}
-                disabled={isLoading || !verifyCode}
+                disabled={loading || !verifyCode}
                 style={({ pressed }) => [
                   styles.btn,
                   {
                     backgroundColor: colors.primary,
                     borderRadius: colors.radius,
-                    opacity: isLoading || !verifyCode ? 0.6 : pressed ? 0.85 : 1,
+                    opacity:
+                      loading || !verifyCode ? 0.6 : pressed ? 0.85 : 1,
                   },
                 ]}
               >
-                <Text style={[styles.btnText, { color: colors.primaryForeground }]}>
-                  {isLoading ? "Verifying…" : "Verify email"}
+                <Text
+                  style={[styles.btnText, { color: colors.primaryForeground }]}
+                >
+                  {loading ? "Verifying…" : "Verify email"}
                 </Text>
               </Pressable>
 
-              <Pressable onPress={() => signUp.verifications.sendEmailCode()}>
-                <Text style={[styles.linkText, { color: colors.primary, textAlign: "center" }]}>
+              <Pressable onPress={handleResend}>
+                <Text
+                  style={[
+                    styles.linkText,
+                    { color: colors.primary, textAlign: "center" },
+                  ]}
+                >
                   Resend code
                 </Text>
               </Pressable>
 
-              <Pressable onPress={() => { setShowVerify(false); setVerifyCode(""); setError(null); }}>
-                <Text style={[styles.linkText, { color: colors.mutedForeground, textAlign: "center" }]}>
+              <Pressable
+                onPress={() => {
+                  setShowVerify(false);
+                  setVerifyCode("");
+                  setError(null);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.linkText,
+                    { color: colors.mutedForeground, textAlign: "center" },
+                  ]}
+                >
                   ← Back
                 </Text>
               </Pressable>
             </View>
           ) : (
             <View style={styles.form}>
-              <Text style={[styles.h1, { color: colors.foreground }]}>Create your account</Text>
+              <Text style={[styles.h1, { color: colors.foreground }]}>
+                Create your account
+              </Text>
               <Text style={[styles.h2, { color: colors.mutedForeground }]}>
                 Join PointHive and start earning rewards
               </Text>
 
-              <View style={styles.field}>
-                <Text style={[styles.label, { color: colors.mutedForeground }]}>Full name</Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.card,
-                      borderColor: colors.border,
-                      borderRadius: colors.radius,
-                      color: colors.foreground,
-                    },
-                  ]}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Jane Smith"
-                  placeholderTextColor={colors.mutedForeground}
-                  autoCapitalize="words"
-                  autoComplete="name"
-                />
+              <View style={styles.nameRow}>
+                <View style={[styles.field, { flex: 1 }]}>
+                  <Text
+                    style={[styles.label, { color: colors.mutedForeground }]}
+                  >
+                    First name
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.border,
+                        borderRadius: colors.radius,
+                        color: colors.foreground,
+                      },
+                    ]}
+                    value={firstName}
+                    onChangeText={setFirstName}
+                    placeholder="Jane"
+                    placeholderTextColor={colors.mutedForeground}
+                    autoCapitalize="words"
+                    autoComplete="given-name"
+                    returnKeyType="next"
+                  />
+                </View>
+
+                <View style={[styles.field, { flex: 1 }]}>
+                  <Text
+                    style={[styles.label, { color: colors.mutedForeground }]}
+                  >
+                    Last name
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.border,
+                        borderRadius: colors.radius,
+                        color: colors.foreground,
+                      },
+                    ]}
+                    value={lastName}
+                    onChangeText={setLastName}
+                    placeholder="Smith"
+                    placeholderTextColor={colors.mutedForeground}
+                    autoCapitalize="words"
+                    autoComplete="family-name"
+                    returnKeyType="next"
+                  />
+                </View>
               </View>
 
               <View style={styles.field}>
-                <Text style={[styles.label, { color: colors.mutedForeground }]}>Email</Text>
+                <Text style={[styles.label, { color: colors.mutedForeground }]}>
+                  Email
+                </Text>
                 <TextInput
                   style={[
                     styles.input,
@@ -212,11 +289,14 @@ export default function SignUpScreen() {
                   autoCapitalize="none"
                   autoComplete="email"
                   autoCorrect={false}
+                  returnKeyType="next"
                 />
               </View>
 
               <View style={styles.field}>
-                <Text style={[styles.label, { color: colors.mutedForeground }]}>Password</Text>
+                <Text style={[styles.label, { color: colors.mutedForeground }]}>
+                  Password
+                </Text>
                 <TextInput
                   style={[
                     styles.input,
@@ -239,44 +319,69 @@ export default function SignUpScreen() {
               </View>
 
               {error ? (
-                <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text>
+                <Text style={[styles.error, { color: colors.destructive }]}>
+                  {error}
+                </Text>
               ) : null}
 
               <View nativeID="clerk-captcha" />
 
               <Pressable
                 onPress={handleSignUp}
-                disabled={isLoading || !email || !password || !name}
+                disabled={loading || !email || !password || !firstName}
                 style={({ pressed }) => [
                   styles.btn,
                   {
                     backgroundColor: colors.primary,
                     borderRadius: colors.radius,
-                    opacity: isLoading || !email || !password || !name ? 0.6 : pressed ? 0.85 : 1,
+                    opacity:
+                      loading || !email || !password || !firstName
+                        ? 0.6
+                        : pressed
+                          ? 0.85
+                          : 1,
                   },
                 ]}
               >
-                {isLoading ? (
+                {loading ? (
                   <View style={styles.btnInner}>
-                    <FontAwesome6 name="circle-notch" size={16} color={colors.primaryForeground} />
-                    <Text style={[styles.btnText, { color: colors.primaryForeground }]}>
+                    <FontAwesome6
+                      name="circle-notch"
+                      size={16}
+                      color={colors.primaryForeground}
+                    />
+                    <Text
+                      style={[
+                        styles.btnText,
+                        { color: colors.primaryForeground },
+                      ]}
+                    >
                       Creating account…
                     </Text>
                   </View>
                 ) : (
-                  <Text style={[styles.btnText, { color: colors.primaryForeground }]}>
+                  <Text
+                    style={[
+                      styles.btnText,
+                      { color: colors.primaryForeground },
+                    ]}
+                  >
                     Create account
                   </Text>
                 )}
               </Pressable>
 
               <View style={styles.footer}>
-                <Text style={[styles.footerText, { color: colors.mutedForeground }]}>
+                <Text
+                  style={[styles.footerText, { color: colors.mutedForeground }]}
+                >
                   Already have an account?{" "}
                 </Text>
                 <Link href="/login" asChild>
                   <Pressable>
-                    <Text style={[styles.linkText, { color: colors.primary }]}>Sign in</Text>
+                    <Text style={[styles.linkText, { color: colors.primary }]}>
+                      Sign in
+                    </Text>
                   </Pressable>
                 </Link>
               </View>
@@ -319,6 +424,10 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 16,
+  },
+  nameRow: {
+    flexDirection: "row",
+    gap: 12,
   },
   h1: {
     fontFamily: "Inter_700Bold",
