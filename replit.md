@@ -30,7 +30,7 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 - `artifacts/api-server` — Express + Drizzle API at `/api`. Uses Clerk (`@clerk/express`) for production auth; `x-user-id` header still works in development for demo tooling. Users are auto-provisioned on first Clerk sign-in (looked up by `clerk_id`, then by email, then created). Clerk proxy middleware at `/api/__clerk`.
 - `artifacts/loyalty-web` — React + Vite web app for PointHive loyalty marketplace.
-- `artifacts/loyalty-mobile` — Expo React Native app (PointHive Mobile). Uses `@clerk/expo` for authentication with SecureStore session persistence. Real email/password sign-in at `app/login.tsx`, sign-up with email verification at `app/sign-up.tsx`. Uses expo-router, shares the `@workspace/api-client-react` package (calls the same `/api` backend), 4-tab layout (Home/Shop/Inbox/Profile), product detail screen, profile editor, notifications inbox.
+- `artifacts/loyalty-mobile` — Expo React Native app (PointHive Mobile). Uses `@clerk/expo` for authentication with SecureStore session persistence. Real email/password sign-in at `app/login.tsx`, sign-up with email verification at `app/sign-up.tsx`. Uses expo-router, shares the `@workspace/api-client-react` package (calls the same `/api` backend), 4-tab layout (Home/Shop/Inbox/Profile), product detail screen, profile editor, notifications inbox. Seller inventory management: `app/my-listings.tsx` (list/delete own listings, accessible from Profile tab) and `app/edit-listing/[id].tsx` (edit title/description/price/stock, toggle delist/re-list).
 
 ### Mobile auth & API client wiring
 

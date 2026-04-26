@@ -285,6 +285,23 @@ export default function ProfileScreen() {
         ]}
       >
         <Pressable
+          onPress={() => router.push("/my-listings")}
+          style={({ pressed }) => [
+            styles.linkRow,
+            { borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 },
+          ]}
+        >
+          <Feather name="package" size={18} color={colors.foreground} />
+          <Text style={[styles.linkLabel, { color: colors.foreground }]}>
+            My Listings
+          </Text>
+          <Feather
+            name="chevron-right"
+            size={18}
+            color={colors.mutedForeground}
+          />
+        </Pressable>
+        <Pressable
           onPress={() => router.push("/(tabs)/notifications")}
           style={({ pressed }) => [
             styles.linkRow,
